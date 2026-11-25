@@ -93,24 +93,53 @@ xe TQ chỉ vào làn IGV và nhà chuyển tải, xe có tài xế VN làm ph�
 
 | Kịch bản | Seed | Va chạm | Hở xe–xe (m) | Hở xe–cont (m) | Cont nhập | Cont xuất | Xe TQ ra | Xe VN ra | Lượt cầu trục | Kiểm hoá | Chờ lâu nhất (s) | Chờ cổng IGV cuối | Kết quả |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| normal | 1 | 0 | 3.20 | 0.88 | 27 | 9 | 34 | 33 | 72 | 8 | 166 | 0 | ĐẠT |
-| normal | 2 | 0 | 3.20 | 0.88 | 23 | 12 | 30 | 30 | 69 | 4 | 203 | 1 | ĐẠT |
-| peak | 1 | 0 | 2.73 | 0.88 | 31 | 17 | 42 | 47 | 106 | 4 | 390 | 22 | ĐẠT |
-| peak | 2 | 0 | 2.73 | 0.88 | 31 | 17 | 39 | 45 | 101 | 8 | 266 | 17 | ĐẠT |
-| laneFail | 1 | 0 | 2.73 | 0.88 | 26 | 12 | 37 | 36 | 82 | 7 | 228 | 5 | ĐẠT |
-| laneFail | 2 | 0 | 2.73 | 0.88 | 30 | 12 | 39 | 37 | 86 | 6 | 175 | 0 | ĐẠT |
-| breakdown | 1 | 0 | 3.20 | 0.88 | 30 | 12 | 34 | 37 | 80 | 6 | 300 | 0 | ĐẠT |
-| breakdown | 2 | 0 | 2.73 | 0.88 | 25 | 9 | 34 | 32 | 73 | 9 | 316 | 1 | ĐẠT |
-| inspection | 1 | 0 | 2.73 | 0.88 | 19 | 6 | 20 | 27 | 54 | 13 | 412 | 12 | ĐẠT |
-| inspection | 2 | 0 | 3.20 | 0.88 | 27 | 8 | 30 | 31 | 68 | 10 | 266 | 1 | ĐẠT |
-| av | 1 | 0 | 2.83 | 0.88 | 29 | 10 | 34 | 34 | 76 | 6 | 87 | 0 | ĐẠT |
-| av | 2 | 0 | 2.83 | 0.88 | 23 | 11 | 29 | 30 | 66 | 6 | 283 | 4 | ĐẠT |
-| weather | 1 | 0 | 2.01 | 0.88 | 24 | 8 | 32 | 29 | 70 | 5 | 273 | 0 | ĐẠT |
-| weather | 2 | 0 | 2.65 | 0.88 | 22 | 13 | 32 | 29 | 69 | 6 | 161 | 2 | ĐẠT |
-| stress | 1 | 0 | 2.46 | 0.88 | 28 | 12 | 36 | 45 | 90 | 6 | 895 | 97 | ĐẠT |
-| stress | 2 | 0 | 2.46 | 0.88 | 29 | 16 | 34 | 47 | 100 | 8 | 341 | 87 | ĐẠT |
+| normal | 1 | 0 | 2.73 | 0.88 | 22 | 7 | 29 | 30 | 63 | 6 | 306 | 1 | ĐẠT |
+| normal | 2 | 0 | 3.20 | 0.88 | 23 | 14 | 32 | 32 | 71 | 6 | 179 | 2 | ĐẠT |
+| peak | 1 | 0 | 2.73 | 0.88 | 25 | 18 | 35 | 41 | 93 | 6 | 286 | 30 | ĐẠT |
+| peak | 2 | 0 | 2.73 | 0.88 | 31 | 15 | 39 | 44 | 97 | 3 | 271 | 16 | ĐẠT |
+| laneFail | 1 | 0 | 2.73 | 0.88 | 18 | 11 | 24 | 25 | 63 | 5 | 437 | 17 | ĐẠT |
+| laneFail | 2 | 0 | 2.73 | 0.88 | 26 | 12 | 36 | 33 | 76 | 4 | 280 | 4 | ĐẠT |
+| breakdown | 1 | 0 | 2.73 | 0.88 | 21 | 10 | 28 | 29 | 65 | 10 | 333 | 5 | ĐẠT |
+| breakdown | 2 | 0 | 3.20 | 0.88 | 24 | 9 | 31 | 32 | 69 | 8 | 386 | 4 | ĐẠT |
+| inspection | 1 | 0 | 2.73 | 0.88 | 22 | 6 | 24 | 27 | 61 | 12 | 329 | 9 | ĐẠT |
+| inspection | 2 | 0 | 2.73 | 0.88 | 22 | 7 | 26 | 27 | 58 | 11 | 305 | 7 | ĐẠT |
+| av | 1 | 0 | 2.62 | 0.88 | 25 | 9 | 31 | 29 | 69 | 8 | 412 | 1 | ĐẠT |
+| av | 2 | 0 | 2.62 | 0.88 | 24 | 10 | 30 | 32 | 67 | 6 | 255 | 3 | ĐẠT |
+| weather | 1 | 0 | 2.01 | 0.88 | 16 | 6 | 23 | 24 | 51 | 6 | 257 | 9 | ĐẠT |
+| weather | 2 | 0 | 2.01 | 0.88 | 21 | 11 | 28 | 29 | 67 | 9 | 323 | 4 | ĐẠT |
+| stress | 1 | 0 | 2.73 | 0.88 | 25 | 19 | 34 | 44 | 97 | 6 | 294 | 94 | ĐẠT |
+| stress | 2 | 0 | 2.73 | 0.88 | 26 | 19 | 36 | 45 | 100 | 3 | 353 | 86 | ĐẠT |
 
-16/16 lượt đạt. Thêm lượt dài 180 phút seed 3 và 4 cho cả 8 kịch bản: xem mô tả pull request.
+16/16 lượt đạt.
+
+Lượt dài 180 phút mô phỏng, seed 3 và 4 (`node test/run-scenarios.js 180 3 4`):
+
+| Kịch bản | Seed | Va chạm | Hở xe–xe (m) | Hở xe–cont (m) | Cont nhập | Cont xuất | Xe TQ ra | Xe VN ra | Lượt cầu trục | Kiểm hoá | Chờ lâu nhất (s) | Chờ cổng IGV cuối | Kết quả |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| normal | 3 | 0 | 3.20 | 0.88 | 71 | 30 | 92 | 93 | 201 | 12 | 220 | 0 | ĐẠT |
+| normal | 4 | 0 | 3.20 | 0.88 | 66 | 21 | 81 | 80 | 173 | 14 | 324 | 1 | ĐẠT |
+| peak | 3 | 0 | 2.73 | 0.88 | 86 | 50 | 116 | 123 | 280 | 19 | 467 | 69 | ĐẠT |
+| peak | 4 | 0 | 2.73 | 0.88 | 88 | 47 | 116 | 123 | 276 | 23 | 347 | 54 | ĐẠT |
+| laneFail | 3 | 0 | 2.73 | 0.88 | 83 | 45 | 119 | 113 | 255 | 18 | 271 | 0 | ĐẠT |
+| laneFail | 4 | 0 | 2.73 | 0.88 | 79 | 30 | 106 | 99 | 222 | 17 | 275 | 2 | ĐẠT |
+| breakdown | 3 | 0 | 2.73 | 0.88 | 80 | 30 | 103 | 101 | 221 | 10 | 300 | 0 | ĐẠT |
+| breakdown | 4 | 0 | 3.20 | 0.88 | 75 | 25 | 96 | 89 | 197 | 15 | 300 | 1 | ĐẠT |
+| inspection | 3 | 0 | 2.73 | 0.88 | 69 | 24 | 87 | 88 | 186 | 43 | 340 | 10 | ĐẠT |
+| inspection | 4 | 0 | 2.73 | 0.88 | 64 | 15 | 76 | 77 | 161 | 43 | 407 | 9 | ĐẠT |
+| av | 3 | 0 | 2.62 | 0.88 | 75 | 31 | 101 | 96 | 214 | 13 | 320 | 1 | ĐẠT |
+| av | 4 | 0 | 2.62 | 0.88 | 71 | 21 | 89 | 89 | 185 | 11 | 242 | 1 | ĐẠT |
+| weather | 3 | 0 | 2.01 | 0.88 | 68 | 30 | 90 | 88 | 197 | 19 | 388 | 1 | ĐẠT |
+| weather | 4 | 0 | 2.01 | 0.88 | 65 | 21 | 83 | 78 | 171 | 18 | 273 | 1 | ĐẠT |
+| stress | 3 | 0 | 2.73 | 0.88 | 51 | 100 | 122 | 146 | 312 | 19 | 421 | 312 | ĐẠT |
+| stress | 4 | 0 | 2.73 | 0.88 | 56 | 72 | 107 | 124 | 264 | 18 | 493 | 248 | ĐẠT |
+
+16/16 lượt đạt. Tổng cộng 32/32 lượt, 0 va chạm.
+
+Hai lỗi kẹt chỉ lộ ra ở lượt dài đã được sửa trước khi chốt bảng trên:
+
+- **Hai xe nối đuôi khoá nhau**: vùng phồng lookahead của xe trước lấn ra sau đuôi, chạm ô xe sau đã giữ. Sửa: ô nằm hẳn sau đuôi xe hiện tại (quá 0,5 m) không chặn xe đó, vì xe chỉ tiến lên. Bộ kiểm tra va chạm độc lập vẫn chạy mỗi bước.
+- **Xe có hàng chặn đầu hàng chờ ngoài cổng**: các ô chờ đầy hàng xuất, xe TQ rỗng đến lấy hàng lại xếp sau một xe TQ chở hàng nhập đang chờ chỗ trống. Sửa: SIVIP chỉ gọi xe có hàng từ bãi chờ ngoài cổng vào khi đã giữ trước được ô chờ container; xe rỗng đến nhận hàng luôn được gọi. Đây là giả định vận hành (đặt chỗ trước), cần xác nhận với quy trình SIVIP thật.
+- Thêm: sự kiện xe chết máy khi chưa có xe phù hợp từng chặn cả hàng đợi sự kiện; nay chỉ tự hẹn lại sau 5 s.
 Tiêu chí đạt: 0 lần giao nhau giữa hai xe và giữa xe với container ở ô chờ, 0 vi phạm bất biến ô lưới,
 khoảng hở nhỏ nhất ≥ 0,3 m, không xe nào chờ liên tục quá 20 phút, có sản lượng ra khỏi bãi.
 Khoảng hở xe–container luôn là 0,88 m: đó là khoảng cách thiết kế giữa xe đang dừng và ô chờ cùng làn (đo trên bản vẽ).

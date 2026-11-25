@@ -40,6 +40,7 @@
   const CELL = 1.0;            // ô lưới (m)
   const MARGIN = 0.6;          // biên an toàn thân xe khi đặt chỗ (m)
   const CLAIM_MARGIN = 1.0;    // biên khi đặt chỗ phía trước
+  const REAR_TOL = 0.5;        // ô cách đuôi xe quá ngưỡng này (m) coi là phía sau, không chặn xe
   const GX0 = -10, GZ0 = -120, GW = 260, GH = 445; // lưới bao: x -10..250, z -120..325
   const HALF_DIAG = CELL * Math.SQRT2 / 2;
   const EXIT_CLEAR = 3;
@@ -296,7 +297,7 @@
     this.weather = this.sc.weather ? 0.6 : 1;
     this.gapExtra = this.sc.weather ? 4 : 0;
     this.version = 0;
-    this._bodies = mkPool(); this._cells = [];
+    this._bodies = mkPool(); this._cells = []; this._rearObb = mkObb(); this._rear = null;
     this.colors = ['#c0392b', '#2471a3', '#1e8449', '#d68910', '#7d3c98', '#5d6d7e', '#a04000', '#117a65'];
     this.initZones();
     this.initPaths();
@@ -370,11 +371,11 @@
 
   // ------------------------------------------------------------------ ô chờ container trong nhà chuyển tải
   Sim.prototype.canIn = function (s, dir) { return (s.dir === null || s.dir === dir) && s.stack.length + s.inRes < TIERS; };
-  Sim.prototype.canReserveIn = function (half, dir) { return this.slots.some(s => s.half === half && this.canIn(s, dir)); };
+  Sim.prototype.canReserveIn = function (half, dir) { return this.slots.some(s => (!half || s.half === half) && this.canIn(s, dir)); };
   Sim.prototype.reserveIn = function (half, dir) {
     let best = null;
     for (const s of this.slots) {
-      if (s.half !== half || !this.canIn(s, dir)) continue;
+      if ((half && s.half !== half) || !this.canIn(s, dir)) continue;
       const score = (s.dir === dir ? 0 : 10) + s.stack.length;
       if (!best || score < best.score) best = { s, score };
     }
@@ -434,7 +435,16 @@
     const ow = this.owner, zo = this.zoneOf;
     for (let i = 0; i < cells.length; i++) {
       const c = cells[i]; const o = ow[c];
-      if (o !== 0 && o !== veh.id) { this._blk = { type: 1, cell: c, owner: o }; return 1; }
+      if (o !== 0 && o !== veh.id) {
+        // Ô nằm hẳn phía sau đuôi xe hiện tại: xe chỉ tiến lên nên không bao giờ quét tới ô đó.
+        // Bỏ qua để tránh hai xe nối đuôi khoá nhau (vùng phồng lookahead của xe trước chạm ô xe sau đã giữ).
+        const r = this._rear;
+        if (r && r.vid === veh.id) {
+          const dx = GX0 + (c % GW) + 0.5 - r.cx, dz = GZ0 + Math.floor(c / GW) + 0.5 - r.cz;
+          if (dx * r.ux + dz * r.uz < -r.hl - REAR_TOL) continue;
+        }
+        this._blk = { type: 1, cell: c, owner: o }; return 1;
+      }
       const z = zo[c];
       if (z !== 0 && this.zones[z].lockedBy !== veh.id) { this._blk = { type: 2, zone: z, cell: c }; return 2; }
     }
@@ -564,12 +574,11 @@
     }
     let lane = null;
     for (const l of this.freeLanes('tq')) {
-      if (v.job === 'tqImp' ? this.canReserveIn(l.half, 'imp') : this.availOut(l.half, 'exp') > 0) { lane = l; break; }
+      if (v.job === 'tqImp' ? l.half === v.inSlot.half : this.availOut(l.half, 'exp') > 0) { lane = l; break; }
     }
     if (!lane) return false;
     lane.by = v.id; lane.uses++; v.lane = lane.i;
-    if (v.job === 'tqImp') v.inSlot = this.reserveIn(lane.half, 'imp');
-    else { v.outSlot = this.reserveOut(lane.half, 'exp'); this.enRoute.tqExp--; }
+    if (v.job !== 'tqImp') { v.outSlot = this.reserveOut(lane.half, 'exp'); this.enRoute.tqExp--; }
     const head = [[L.igvIn, L.igvInStopZ], [L.igvIn, L.bandZ], [L.bandX, L.bandZ]];
     const tail = [[L.bandWX, lane.tz], [lane.front, lane.tz]];
     if (st) {
@@ -593,12 +602,11 @@
     if (this.inside >= this.sc.cap) return false;
     let lane = null;
     for (const l of this.freeLanes('vn')) {
-      if (v.job === 'vnExp' ? this.canReserveIn(l.half, 'exp') : this.availOut(l.half, 'imp') > 0) { lane = l; break; }
+      if (v.job === 'vnExp' ? l.half === v.inSlot.half : this.availOut(l.half, 'imp') > 0) { lane = l; break; }
     }
     if (!lane) return false;
     lane.by = v.id; lane.uses++; v.lane = lane.i;
-    if (v.job === 'vnExp') v.inSlot = this.reserveIn(lane.half, 'exp');
-    else { v.outSlot = this.reserveOut(lane.half, 'imp'); this.enRoute.vnImp--; }
+    if (v.job !== 'vnExp') { v.outSlot = this.reserveOut(lane.half, 'imp'); this.enRoute.vnImp--; }
     const wps = v.gate === 'ne'
       ? [[L.neInX, L.neStopZ], [L.neInX, L.topZ], [L.vnS, L.topZ], [L.vnS, lane.tz], [lane.front, lane.tz]]
       : [[L.vnS, L.nwStopZ], [L.vnS, lane.tz], [lane.front, lane.tz]];
@@ -722,13 +730,13 @@
     while (this.events.length && this.events[0].t <= this.t) {
       const e = this.events.shift();
       if (e.type === 'arrive') {
-        if (e.fn === 'tqImp') this.backlog.igv.push(() => this.makeTQ('tqImp'));
-        else if (e.fn === 'vnExp') this.backlog.nw.push(() => this.makeVN('vnExp', 'nw'));
+        if (e.fn === 'tqImp') this.backlog.igv.push(this.bk('tqImp', () => this.makeTQ('tqImp')));
+        else if (e.fn === 'vnExp') this.backlog.nw.push(this.bk('vnExp', () => this.makeVN('vnExp', 'nw')));
         else { const k = (e.fn === 'thruS' ? 0 : 2) + (this.rng() < 0.5 ? 0 : 1); this.backlog.thru[k].push(() => this.makeThru(k)); }
       } else if (e.type === 'callVnImp') {
-        if (this.unclaimed('imp') > 0) { this.enRoute.vnImp++; this.backlog.ne.push(() => this.makeVN('vnImp', 'ne')); }
+        if (this.unclaimed('imp') > 0) { this.enRoute.vnImp++; this.backlog.ne.push(this.bk('vnImp', () => this.makeVN('vnImp', 'ne'))); }
       } else if (e.type === 'callTqExp') {
-        if (this.unclaimed('exp') > 0) { this.enRoute.tqExp++; this.backlog.igv.push(() => this.makeTQ('tqExp')); }
+        if (this.unclaimed('exp') > 0) { this.enRoute.tqExp++; this.backlog.igv.push(this.bk('tqExp', () => this.makeTQ('tqExp'))); }
       } else if (e.type === 'laneFail') {
         this.lanes[e.lane].failed = true; this.logEv(`Làn ${e.lane + 1} lỗi cảm biến định vị → SIVIP khoá làn, điều xe mới sang làn IGV còn lại`, 'warn');
       } else if (e.type === 'laneRestore') {
@@ -740,7 +748,7 @@
           return (Math.abs(_p1[0] - L.bandX) < 1.5 && _p1[1] > 178 && _p1[1] < 196) || (Math.abs(_p1[1] - L.bandBotZ) < 1.5 && _p1[0] > 90 && _p1[0] < 125);
         })());
         if (cand.length) { const v = cand[0]; v.broken = this.t + e.dur; this.logEv(`Xe #${v.id} chết máy trên làn IGV, các xe sau tự dừng giữ khoảng cách`, 'warn'); }
-        else { e.t = this.t + 5; this.events.unshift(e); break; }
+        else { this.addEvent(Object.assign({}, e, { t: this.t + 5 })); } // chưa có xe phù hợp: thử lại sau 5 s, không chặn các sự kiện khác
       }
     }
   };
@@ -749,11 +757,27 @@
     const qs = [this.backlog.igv, this.backlog.ne, this.backlog.nw, ...this.backlog.thru];
     for (const q of qs) {
       if (!q.length) continue;
-      if (!q[0].veh) q[0].veh = q[0]();
-      const v = q[0].veh;
-      if (this.trySpawn(v)) { q.shift(); if (v.av) v.label = ''; }
+      // Bãi chờ ngoài cổng: SIVIP chỉ gọi xe có hàng vào khi đã giữ được ô chờ container cho nó
+      // (đặt chỗ trước). Xe rỗng đến nhận hàng luôn được gọi. Nhờ vậy hàng xe trước cổng không
+      // bao giờ bị một xe có hàng nhưng hết chỗ chặn đầu (kẹt vòng: xe rỗng đi giải phóng chỗ
+      // lại xếp sau nó).
+      let k = -1;
+      for (let i = 0; i < q.length; i++) {
+        const j = q[i].job;
+        if (!j || j === 'tqExp' || j === 'vnImp' || this.canReserveIn(null, j === 'tqImp' ? 'imp' : 'exp')) { k = i; break; }
+      }
+      if (k < 0) continue;
+      const e = q[k];
+      if (!e.veh) e.veh = e();
+      const v = e.veh;
+      if (this.trySpawn(v)) {
+        q.splice(k, 1); if (v.av) v.label = '';
+        if (v.job === 'tqImp') v.inSlot = this.reserveIn(null, 'imp');
+        else if (v.job === 'vnExp') v.inSlot = this.reserveIn(null, 'exp');
+      }
     }
   };
+  Sim.prototype.bk = function (job, fn) { fn.job = job; return fn; };
 
   Sim.prototype.step = function () {
     this.t += DT; this.tick++;
@@ -802,6 +826,8 @@
     const body = this.sampleCells(v, st, v.s);
     if (this.bodyConflict(v, body)) this.stats.invariant++;
     this.markCells(v, body);
+    { const bs = this._bodies, rb = bs[v.trailer ? 1 : 0], r = this._rearObb;
+      r.cx = rb.cx; r.cz = rb.cz; r.ux = rb.ux; r.uz = rb.uz; r.hl = rb.hl; r.vid = v.id; this._rear = r; }
     this.releaseZones(v);
     const wf = this.weather; const vmax = v.vmax * wf;
     const look = vmax * vmax / (2 * v.b) + 3 + this.gapExtra;
