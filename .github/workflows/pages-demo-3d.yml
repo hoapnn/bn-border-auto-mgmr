@@ -15,11 +15,10 @@ concurrency:
   group: pages
   cancel-in-progress: true
 jobs:
-  deploy:
+  # Tách 2 job (mẫu chính thức của GitHub): artifact vừa tải lên có thể chưa liệt kê được ngay trong cùng job,
+  # làm deploy-pages báo 'No artifacts named github-pages' (đã gặp ở các lượt push sau PR #3 và #5).
+  build:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
       - name: Gom đúng file demo v2 vào _site
@@ -33,5 +32,12 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - id: deployment
         uses: actions/deploy-pages@v4
