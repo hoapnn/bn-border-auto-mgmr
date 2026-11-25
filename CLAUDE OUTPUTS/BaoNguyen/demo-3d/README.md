@@ -1,5 +1,8 @@
 # Demo 3D bãi container Bảo Nguyên — điều phối xe không va chạm
 
+> **Đã có bản v2 theo layout PDF concept** (`261102-PIVN_BN_ConceptPresentation_2026_V2.pdf`): xem thư mục [`v2/`](v2/README.md).
+> Bản v1 dưới đây dựng từ deck pptx không có kích thước, giữ lại để so sánh.
+
 Mô phỏng 3D chạy trên trình duyệt cho bãi container thông minh cửa khẩu Bảo Nguyên, dựa trên deck
 "Bản Thiết Kế Điều Hành Bãi Container Tự Động" (slide 3: cổng thông minh 2+2 làn, trạm cân 120 tấn,
 SIVIP, CCTV, mạng Viettel, cổng kết nối Hải quan) và các quyết định đã chốt trong `HANDOFF.md`

@@ -7,14 +7,22 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - dir: CLAUDE OUTPUTS/BaoNguyen/demo-3d
+            html: BaoNguyen_Demo3D_v1.html
+          - dir: CLAUDE OUTPUTS/BaoNguyen/demo-3d/v2
+            html: BaoNguyen_Demo3D_v2.html
+    name: ${{ matrix.html }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
       - name: Chạy 8 kịch bản, kiểm tra va chạm ở mọi bước
-        working-directory: CLAUDE OUTPUTS/BaoNguyen/demo-3d
+        working-directory: ${{ matrix.dir }}
         run: npm test
       - name: Kiểm tra file HTML đóng gói khớp mã nguồn
-        working-directory: CLAUDE OUTPUTS/BaoNguyen/demo-3d
-        run: node build.js /tmp/check.html && cmp /tmp/check.html BaoNguyen_Demo3D_v1.html
+        working-directory: ${{ matrix.dir }}
+        run: node build.js /tmp/check.html && cmp /tmp/check.html ${{ matrix.html }}
