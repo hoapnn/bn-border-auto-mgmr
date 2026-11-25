@@ -1,0 +1,36 @@
+name: Đăng demo 3D v2 lên GitHub Pages
+# Chỉ đăng đúng 1 file demo v2 (HTML đã đóng gói sẵn JS/asset).
+# Không đưa tài liệu hợp đồng, báo cáo, HANDOFF hay thư mục khác ra public.
+on:
+  push:
+    branches: [main]
+    paths: ['CLAUDE OUTPUTS/BaoNguyen/demo-3d/v2/BaoNguyen_Demo3D_v2.html', '.github/workflows/pages-demo-3d.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Gom đúng file demo v2 vào _site
+        run: |
+          mkdir _site
+          cp "CLAUDE OUTPUTS/BaoNguyen/demo-3d/v2/BaoNguyen_Demo3D_v2.html" _site/index.html
+          touch _site/.nojekyll
+          printf 'User-agent: *\nDisallow: /\n' > _site/robots.txt
+          ls -la _site
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4
