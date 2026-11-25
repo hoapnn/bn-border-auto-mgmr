@@ -21,6 +21,8 @@
   else root.YardSim = mod;
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
+  // Dữ liệu phần cứng (5G, IGV, cảm biến) nằm ở hardware.js; trình duyệt nạp trước file này (window.YardHW).
+  const HW = typeof require === 'function' ? require('./hardware.js') : globalThis.YardHW;
 
   // ------------------------------------------------------------------ tiện ích
   function mulberry32(a) {
@@ -263,6 +265,10 @@
     { id: 'av', name: 'Mức B: xe tự hành TQ (IGV)',
       desc: 'Toàn bộ xe TQ là xe tự hành (màu trắng), nhận bàn giao điều khiển tại Km0, chạy 14 km/h, chỉ được vào làn IGV và nhà chuyển tải (geofence). Xe VN có tài xế như bình thường.',
       rates: { tqImp: 26, vnExp: 10, thru: 30 }, cap: 24, inspect: 0.2, av: 1, events: [] },
+    { id: 'av5g', name: 'Mức B + sự cố 5G trong nhà chuyển tải',
+      desc: 'Như mức B, nhưng phút thứ 10 trạm nhỏ 5G-07 (trong nhà chuyển tải) mất nguồn: dưới mái chỉ còn sóng yếu xuyên từ ngoài nên độ trễ tăng, IGV tự giảm tốc theo bảng chế độ (hoặc chạy bò bằng IMU + nam châm sàn). Phút thứ 40 khôi phục. Bật lớp "Vùng phủ 5G" để xem vùng yếu lan ra.',
+      rates: { tqImp: 26, vnExp: 10, thru: 30 }, cap: 24, inspect: 0.2, av: 1,
+      events: [{ t: 600, type: 'cellFail', cell: '5G-07' }, { t: 2400, type: 'cellRestore', cell: '5G-07' }] },
     { id: 'weather', name: 'Mưa lớn / sương mù',
       desc: 'Tốc độ tối đa giảm 40%, khoảng cách dừng tăng thêm 4 m. Thông lượng giảm nhưng không có xung đột.',
       rates: { tqImp: 24, vnExp: 10, thru: 30 }, cap: 24, inspect: 0.2, weather: 1, events: [] },
@@ -281,7 +287,7 @@
     this.stampArr = new Int32Array(GW * GH); this.stamp = 1;
     this.vehicles = []; this.trailers = []; this.vmap = new Map();
     this.zones = [null]; this.events = []; this.log = [];
-    this.stats = { collisions: 0, minClear: Infinity, minClearPair: null, minStatic: Infinity, invariant: 0, maxWait: 0, maxWaitId: 0,
+    this.stats = { collisions: 0, minClear: Infinity, minClearPair: null, minStatic: Infinity, minHw: Infinity, minHwId: '', invariant: 0, maxWait: 0, maxWaitId: 0,
       tqOut: 0, vnOut: 0, imp: 0, exp: 0, moves: 0, backhaul: 0, doubleCycle: 0, inspected: 0, thruOut: 0,
       spawned: 0, zoneWaits: 0, despawned: 0, turnaround: [] };
     this.backlog = { igv: [], ne: [], nw: [], thru: [[], [], [], []] };
@@ -294,6 +300,8 @@
     this.gates = { igvIn: 0, igvOut: 0, ne: 0, nw: 0, scale: 0, booth: [0, 0, 0, 0] };
     this.containers = new Map();
     this.inside = 0;
+    this.deadCells = {}; this.netVer = 0;
+    this.avStats = { samples: 0, sumLat: 0, maxLat: 0, weakT: 0, deadT: 0, slowT: 0 };
     this.weather = this.sc.weather ? 0.6 : 1;
     this.gapExtra = this.sc.weather ? 4 : 0;
     this.version = 0;
@@ -722,6 +730,13 @@
     for (const e of this.sc.events) this.events.push(Object.assign({}, e));
     this.events.sort((a, b) => a.t - b.t);
   };
+  // Bật/tắt sự cố một trạm 5G (từ kịch bản hoặc bấm trên giao diện).
+  Sim.prototype.setCellDead = function (id, dead) {
+    if (!!this.deadCells[id] === !!dead || !HW.CELLS.some(c => c.id === id)) return;
+    if (dead) this.deadCells[id] = true; else delete this.deadCells[id];
+    this.netVer++;
+    this.logEv(dead ? `Trạm ${id} mất nguồn → vùng quanh trạm chỉ còn sóng yếu từ trạm lân cận; IGV tự giảm tốc theo độ trễ` : `Trạm ${id} đã khôi phục, độ trễ trở lại bình thường`, dead ? 'warn' : 'ok');
+  };
   Sim.prototype.addEvent = function (e) {
     let i = this.events.length; while (i > 0 && this.events[i - 1].t > e.t) i--;
     this.events.splice(i, 0, e);
@@ -739,6 +754,8 @@
         if (this.unclaimed('exp') > 0) { this.enRoute.tqExp++; this.backlog.igv.push(this.bk('tqExp', () => this.makeTQ('tqExp'))); }
       } else if (e.type === 'laneFail') {
         this.lanes[e.lane].failed = true; this.logEv(`Làn ${e.lane + 1} lỗi cảm biến định vị → SIVIP khoá làn, điều xe mới sang làn IGV còn lại`, 'warn');
+      } else if (e.type === 'cellFail') { this.setCellDead(e.cell, true);
+      } else if (e.type === 'cellRestore') { this.setCellDead(e.cell, false);
       } else if (e.type === 'laneRestore') {
         this.lanes[e.lane].failed = false; this.logEv(`Làn ${e.lane + 1} đã khôi phục`, 'ok');
       } else if (e.type === 'breakdown') {
@@ -788,6 +805,23 @@
     for (let i = 0; i < vs.length; i++) this.updateVehicle(vs[i]);
     if (this._dead) { this.vehicles = this.vehicles.filter(v => !v.dead); this._dead = false; }
     this.checkCollisions();
+    if (this.tick % 5 === 0) this.checkHardware();
+  };
+  // Khoảng hở nhỏ nhất giữa thân xe và các trụ / thiết bị cố định (kiểm tra mỗi 0,5 s).
+  Sim.prototype.checkHardware = function () {
+    const sol = this._solids || (this._solids = HW.solids());
+    let m = this.stats.minHw;
+    for (const b of this.allBodies()) {
+      const o = b.o;
+      for (const d of sol) {
+        const dx = d.x - o.cx, dz = d.z - o.cz;
+        if (dx > 20 || dx < -20 || dz > 20 || dz < -20) continue;
+        const lx = dx * o.ux + dz * o.uz, lz = -dx * o.uz + dz * o.ux;
+        const gap = Math.hypot(Math.max(Math.abs(lx) - o.hl, 0), Math.max(Math.abs(lz) - o.hw, 0)) - d.r;
+        if (gap < m) { m = gap; this.stats.minHwId = d.id; }
+      }
+    }
+    this.stats.minHw = m;
   };
 
   Sim.prototype.updateVehicle = function (v) {
@@ -829,8 +863,18 @@
     { const bs = this._bodies, rb = bs[v.trailer ? 1 : 0], r = this._rearObb;
       r.cx = rb.cx; r.cz = rb.cz; r.ux = rb.ux; r.uz = rb.uz; r.hl = rb.hl; r.vid = v.id; this._rear = r; }
     this.releaseZones(v);
-    const wf = this.weather; const vmax = v.vmax * wf;
-    const look = vmax * vmax / (2 * v.b) + 3 + this.gapExtra;
+    // IGV: độ trễ 5G tại vị trí xe quyết định tốc độ tối đa và khoảng dừng thêm (chỉ làm xe CHẬM hơn,
+    // không đổi cơ chế đặt chỗ ô nên không ảnh hưởng an toàn va chạm).
+    let wf = this.weather; let gapE = this.gapExtra;
+    if (v.av) {
+      ptAt(st.path, v.s, _p1); const sv = HW.serving(_p1[0], _p1[1], this.deadCells);
+      v.lat = sv.lat; v.cell = sv.cell ? sv.cell.id : null;
+      const f = HW.speedFactor(sv.lat); wf *= f; gapE += HW.extraGap(sv.lat);
+      const a = this.avStats; a.samples++; if (sv.lat < Infinity) { a.sumLat += sv.lat; if (sv.lat > a.maxLat) a.maxLat = sv.lat; }
+      if (sv.lat > 50) a.weakT += DT; if (sv.lat === Infinity) a.deadT += DT; if (f < 1) a.slowT += DT;
+    }
+    const vmax = v.vmax * wf;
+    const look = vmax * vmax / (2 * v.b) + 3 + gapE;
     let target = Math.min(st.s1, v.s + look);
     if (v.zones.length) target = Math.max(target, Math.min(v.clearTo, st.s1));
     let ss = v.s; v.blocked = null;
@@ -849,7 +893,7 @@
       break;
     }
     const avail = ss - v.s;
-    const gap = v.blocked ? this.gapExtra : 0;
+    const gap = v.blocked ? gapE : 0;
     const vAllow = Math.sqrt(Math.max(0, 2 * v.b * (avail - gap - 0.05)));
     let vc = vmax;
     for (let s2 = v.s; s2 <= ss; s2 += 2) vc = Math.min(vc, Math.sqrt(capAt(st.path, s2) ** 2 * wf * wf + 2 * v.b * (s2 - v.s)));
@@ -857,7 +901,7 @@
     if (nv < 0) nv = 0;
     let ds = Math.min(nv * DT, Math.max(0, avail - (v.blocked ? gap : 0)));
     if (!v.blocked && ss >= st.s1 - 1e-9 && st.s1 - v.s < 0.06) ds = st.s1 - v.s;
-    v.s += ds; v.v = ds / DT;
+    v.s += ds; v.v = ds / DT; v.dist = (v.dist || 0) + ds;
     if (v.v < 0.02 && v.blocked) { v.v = 0; v.waitT += DT; v.totalWait += DT; this.noteWait(v); }
     else if (v.v > 0.05) v.waitT = 0;
     if (v.s >= st.s1 - 1e-6) {
@@ -948,7 +992,8 @@
       const cont = v.trailer.container; const cc = cont ? (this.containers.get(cont) || {}).color : null;
       vs.push({ id: v.id, kind: v.kind, job: v.job, fx: front[0], fz: front[1], h: Math.atan2(bs[0].uz, bs[0].ux),
         trailer: { cx: bs[1].cx, cz: bs[1].cz, h: Math.atan2(bs[1].uz, bs[1].ux), container: cont, color: cc },
-        state: v.state, label: v.label, blocked: !!v.blocked && v.v === 0, broken: v.broken && this.t < v.broken, zones: v.zones.slice(), av: v.av, wait: v.waitT });
+        state: v.state, label: v.label, blocked: !!v.blocked && v.v === 0, broken: v.broken && this.t < v.broken, zones: v.zones.slice(), av: v.av, wait: v.waitT,
+        spd: v.v, lat: v.av ? v.lat : null, cell: v.av ? v.cell : null, dist: v.dist || 0 });
     }
     const cranes = this.cranes.map(c => ({ x: c.x, z: c.z, sy: c.sy, carry: c.carry ? (this.containers.get(c.carry) || {}).color || '#888' : null, busy: !!c.cur }));
     return { t: this.t, vehicles: vs, cranes };
@@ -965,7 +1010,9 @@
     return { t: this.t, inside: this.inside,
       queueIGV: this.backlog.igv.length + notIn(isTQ), queueNE: this.backlog.ne.length + notIn(v => v.gate === 'ne'), queueNW: this.backlog.nw.length + notIn(v => v.gate === 'nw'),
       tqOut: s.tqOut, vnOut: s.vnOut, imp: s.imp, exp: s.exp, moves: s.moves, backhaul: s.backhaul, doubleCycle: s.doubleCycle, inspected: s.inspected, thruOut: s.thruOut,
-      collisions: s.collisions, minClear: s.minClear, minStatic: s.minStatic, invariant: s.invariant, maxWait: s.maxWait, zoneWaits: s.zoneWaits, avgTurn: tA,
+      collisions: s.collisions, minHw: s.minHw, minHwId: s.minHwId, minClear: s.minClear, minStatic: s.minStatic, invariant: s.invariant, maxWait: s.maxWait, zoneWaits: s.zoneWaits, avgTurn: tA,
+      av: Object.assign({}, this.avStats, { avgLat: this.avStats.samples ? this.avStats.sumLat / this.avStats.samples : 0 }),
+      deadCells: Object.keys(this.deadCells), netVer: this.netVer,
       stock: this.stockCount(), zonesLocked: this.zones.slice(1).filter(z => z.lockedBy).length,
       lanes: this.lanes.map(l => l.failed ? 'failed' : l.occ ? 'busy' : l.by ? 'reserved' : 'free'),
       slots: this.slots.map(sl => ({ n: sl.stack.length, dir: sl.dir })) };
@@ -977,7 +1024,7 @@
   };
 
   return {
-    Sim, SCENARIOS, LAYOUT, LANES, ZONE_RECTS, DT, CELL, GX0, GZ0, GW, GH, buildPath, ptAt,
+    Sim, HW, SCENARIOS, LAYOUT, LANES, ZONE_RECTS, DT, CELL, GX0, GZ0, GW, GH, buildPath, ptAt,
     dims: { TRACTOR_LEN, TRACTOR_W, TRAILER_LEN, TRAILER_W, CAB_LEN, FIFTH_WHEEL, KINGPIN_FRONT, CONT_LEN, CONT_W, CONT_H, CRANE_REST_Y, TIERS },
   };
 });

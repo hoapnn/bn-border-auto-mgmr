@@ -30,12 +30,13 @@ for (const sc of SCENARIOS) {
     if (s.invariant > 0) errs.push(`${s.invariant} vi phạm bất biến ô lưới ${JSON.stringify(sim.firstInv)}`);
     if (s.minClear < MIN_CLEAR) errs.push(`khoảng hở xe–xe nhỏ nhất ${s.minClear.toFixed(2)} m < ${MIN_CLEAR}`);
     if (s.minStatic < MIN_CLEAR) errs.push(`khoảng hở xe–container nhỏ nhất ${s.minStatic.toFixed(2)} m < ${MIN_CLEAR}`);
+    if (s.minHw < MIN_CLEAR) errs.push(`khoảng hở xe–thiết bị cố định nhỏ nhất ${s.minHw.toFixed(2)} m < ${MIN_CLEAR} (${s.minHwId})`);
     if (s.maxWait > MAX_WAIT) errs.push(`xe #${sim.stats.maxWaitId} chờ ${Math.round(s.maxWait)} s`);
     const done = s.tqOut + s.vnOut;
     if (done < minutes / 4) errs.push(`thông lượng quá thấp (${done} lượt)`);
     if (errs.length) failed++;
     rows.push({ 'kịch bản': sc.id, seed, 'phút': minutes, 'va chạm': s.collisions, 'hở xe–xe (m)': s.minClear.toFixed(2),
-      'hở xe–cont (m)': s.minStatic.toFixed(2), 'cont nhập': s.imp, 'cont xuất': s.exp, 'xe TQ ra': s.tqOut, 'xe VN ra': s.vnOut,
+      'hở xe–cont (m)': s.minStatic.toFixed(2), 'hở xe–thiết bị (m)': s.minHw.toFixed(2), 'cont nhập': s.imp, 'cont xuất': s.exp, 'xe TQ ra': s.tqOut, 'xe VN ra': s.vnOut,
       'lượt cầu trục': s.moves, 'kiểm hoá': s.inspected, 'chờ lâu nhất (s)': Math.round(s.maxWait), 'chờ IGV': s.queueIGV,
       'ms': Date.now() - t0, 'kết quả': errs.length ? 'LỖI: ' + errs.join('; ') : 'ĐẠT' });
   }

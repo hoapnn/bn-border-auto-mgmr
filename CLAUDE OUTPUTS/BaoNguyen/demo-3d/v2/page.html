@@ -66,7 +66,31 @@ aside h2 { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; co
 #log li.warn { border-color: var(--warn); } #log li.ok { border-color: var(--ok); } #log li.err { border-color: var(--err); }
 #log time { font-family: var(--f-num); color: var(--muted); font-size: 11px; margin-right: 4px; }
 .how { font-size: 12.5px; color: #b9c9d6; margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+#views, #legend, #info, #heatLegend, #loading { z-index: 3; }
+#info { position: absolute; left: max(12px, env(safe-area-inset-left, 0px)); top: 12px; width: min(340px, calc(100% - 24px)); max-height: calc(100% - 80px); overflow-y: auto; background: rgba(16,27,38,.96); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; font-size: 12.5px; box-shadow: 0 6px 24px rgba(0,0,0,.4); }
+#info h3 { margin: 0 24px 2px 0; font-size: 14px; line-height: 1.3; }
+#info .kind { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
+#info .kind i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+#info dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; }
+#info dt { color: var(--muted); } #info dd { margin: 0; font-variant-numeric: tabular-nums; }
+#info p { margin: 8px 0 0; color: #b9c9d6; }
+#info .live { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--line); }
+#info .x { position: absolute; right: 8px; top: 8px; padding: 1px 8px; }
+#info .act { margin-top: 10px; }
+.sw { display: inline-block; width: 12px; height: 9px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
+#heatLegend { display: none; position: absolute; right: 12px; top: 12px; background: rgba(16,27,38,.9); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 12px; gap: 3px; }
+#heatLegend.on { display: grid; }
+details.spec { border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; }
+details.spec summary { cursor: pointer; font-weight: 600; font-size: 12.5px; }
+details.spec table { width: 100%; border-collapse: collapse; margin: 6px 0 2px; font-size: 12px; }
+details.spec th { text-align: left; color: var(--accent); font-size: 11px; letter-spacing: .05em; text-transform: uppercase; padding-top: 8px; }
+details.spec td { vertical-align: top; padding: 2px 0; border-top: 1px solid #1a2836; }
+details.spec td:first-child { color: var(--muted); width: 32%; padding-right: 8px; }
+.opts .sub { padding-left: 4px; display: grid; gap: 4px; }
+.opts i.dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
 @media (max-width: 760px) {
+  #info { top: auto; bottom: 56px; max-height: 45%; }
+  #heatLegend { top: auto; bottom: 100px; right: 12px; }
   #app { grid-template-columns: 1fr; grid-template-rows: auto 1fr 42%; }
   body.panel-closed #app { grid-template-rows: auto 1fr 0; }
   aside { border-left: 0; border-top: 1px solid var(--line); }
@@ -92,7 +116,16 @@ aside h2 { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; co
   <div id="view">
     <div id="loading">Đang tải mô hình 3D…</div>
     <div id="views">
-      <button type="button" data-view="all">Toàn cảnh</button><button type="button" data-view="gate">Cổng trung tâm</button><button type="button" data-view="shed">Nhà chuyển tải</button><button type="button" data-view="igv">Vòng IGV</button><button type="button" data-view="vn">Cổng nội địa</button><button type="button" data-view="top">Nhìn từ trên</button>
+      <button type="button" data-view="all">Toàn cảnh</button><button type="button" data-view="gate">Cổng trung tâm</button><button type="button" data-view="shed">Nhà chuyển tải</button><button type="button" data-view="igv">Vòng IGV</button><button type="button" data-view="vn">Cổng nội địa</button><button type="button" data-view="top">Nhìn từ trên</button><button type="button" data-view="net">Phủ sóng 5G</button><button type="button" data-view="sensors">Cảm biến</button>
+    </div>
+    <div id="info" hidden></div>
+    <div id="heatLegend">
+      <b style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)">Độ trễ 5G (một vòng)</b>
+      <div><i class="sw" style="background:#4cc38a"></i>≤ 20 ms · đủ tốc độ</div>
+      <div><i class="sw" style="background:#f2c14e"></i>20–50 ms · giảm còn 80%</div>
+      <div><i class="sw" style="background:#f5a524"></i>50–100 ms · giảm còn 50%</div>
+      <div><i class="sw" style="background:#ef5350"></i>&gt; 100 ms · chạy bò</div>
+      <div><i class="sw" style="background:#7a3a8a"></i>Mất sóng · chạy dự phòng</div>
     </div>
     <div id="legend">
       <div><i style="background:#d64541"></i>Xe TQ (làn IGV)</div>
@@ -131,6 +164,31 @@ aside h2 { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; co
     </section>
     <section><h2>Nhà chuyển tải · 8 làn</h2><div class="chips" id="lanes"></div></section>
     <section><h2>Vùng giao cắt</h2><p class="lab" style="margin:0"><span id="mZoneW">0</span>. Mỗi vùng chỉ một xe; xe chỉ vào khi đã giữ được chỗ thoát phía sau vùng.</p></section>
+    <section><h2>Mạng 5G &amp; IGV tự hành</h2>
+      <div class="kpis">
+        <div class="kpi"><b id="mNetCells">8 / 8</b><span>Trạm 5G đang chạy</span></div>
+        <div class="kpi"><b id="mAvLat">–</b><span>Độ trễ TB của IGV</span></div>
+        <div class="kpi"><b id="mAvWeak">0</b><span>IGV-giây ở sóng yếu (&gt; 50 ms)</span></div>
+        <div class="kpi"><b id="mAvDead">0</b><span>IGV-giây mất sóng</span></div>
+      </div>
+      <p class="lab" style="margin:8px 0 0">Bấm vào một trụ 5G trên mô hình để giả lập mất nguồn, rồi xem IGV giảm tốc (chọn kịch bản "Mức B" hoặc "Mức B + sự cố 5G").</p>
+    </section>
+    <section><h2>Lớp phần cứng</h2>
+      <div class="opts">
+        <label><input type="checkbox" id="optHeat"> Vùng phủ 5G (bản đồ độ trễ)</label>
+        <label><input type="checkbox" id="optRings"> Bán kính phủ danh định của trụ</label>
+        <label><input type="checkbox" id="optMasts" checked> <i class="dot" style="background:#3cc8e6"></i> Trụ 5G</label>
+        <label><input type="checkbox" id="optCam" checked> <i class="dot" style="background:#7fd1ff"></i> Camera</label>
+        <label><input type="checkbox" id="optLidar" checked> <i class="dot" style="background:#a78bfa"></i> LiDAR cố định</label>
+        <label><input type="checkbox" id="optRfid" checked> <i class="dot" style="background:#f5a524"></i> Cổng RFID / OCR</label>
+        <label><input type="checkbox" id="optRtk" checked> <i class="dot" style="background:#4cc38a"></i> Trạm gốc RTK</label>
+        <label><input type="checkbox" id="optUwb" checked> <i class="dot" style="background:#ff7ab6"></i> Neo UWB</label>
+        <label><input type="checkbox" id="optTl" checked> <i class="dot" style="background:#f2c14e"></i> Đèn tín hiệu giao cắt</label>
+        <label><input type="checkbox" id="optMag"> <i class="dot" style="background:#d9e2ea"></i> Nam châm sàn / transponder</label>
+      </div>
+      <p class="lab" style="margin:8px 0 0">Bấm vào bất kỳ thiết bị nào để xem chú thích. Bấm vào một IGV (kịch bản Mức B) để xem cấu hình xe và số liệu trực tiếp.</p>
+    </section>
+    <section><h2>Cấu hình phần cứng IGV</h2><details class="spec" id="igvSpec"><summary>Xem thông số (giả định theo ngành)</summary></details></section>
     <section><h2>Hiển thị</h2>
       <div class="opts">
         <label><input type="checkbox" id="optCells"> Ô lưới xe đang đặt chỗ</label>
@@ -151,6 +209,7 @@ aside h2 { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; co
   </aside>
 </div>
 <script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}</script>
+<!--HW-->
 <!--SIM_CORE-->
 <!--PLAN-->
 <!--APP-->
