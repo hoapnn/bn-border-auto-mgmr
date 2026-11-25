@@ -1,0 +1,20 @@
+name: Demo 3D – kiểm thử không va chạm
+on:
+  push:
+    paths: ['CLAUDE OUTPUTS/BaoNguyen/demo-3d/**', '.github/workflows/demo-3d.yml']
+  pull_request:
+    paths: ['CLAUDE OUTPUTS/BaoNguyen/demo-3d/**', '.github/workflows/demo-3d.yml']
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Chạy 8 kịch bản, kiểm tra va chạm ở mọi bước
+        working-directory: CLAUDE OUTPUTS/BaoNguyen/demo-3d
+        run: npm test
+      - name: Kiểm tra file HTML đóng gói khớp mã nguồn
+        working-directory: CLAUDE OUTPUTS/BaoNguyen/demo-3d
+        run: node build.js /tmp/check.html && cmp /tmp/check.html BaoNguyen_Demo3D_v1.html
