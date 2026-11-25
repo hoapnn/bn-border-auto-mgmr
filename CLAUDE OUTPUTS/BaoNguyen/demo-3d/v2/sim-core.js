@@ -97,6 +97,22 @@
     return { i, no: i + 1, type: i < 4 ? 'vn' : 'tq', half, zc, tz: zc - 1.5, sz: zc + 1.9, front, cx: front - CONT_BACK };
   });
 
+  // Barie (hạng mục VVS): post = (x, z) chân trụ, rot = hướng tay đòn (rad, quanh trục y; tay đòn chạy theo (sin rot, cos rot)),
+  // len = chiều dài tay đòn. Mở khi: cổng → SIVIP đã đặt được ô / làn (gates[...] > t); làn nhà chuyển tải → làn đã có xe đặt chỗ.
+  const L0 = LAYOUT;
+  const BARRIERS = [
+    { key: 'igvIn', x: L0.igvIn - 2.9, z: L0.igvInStopZ - 1.5, rot: Math.PI / 2, len: 6.5, gate: 'igvIn' },
+    { key: 'igvOut', x: L0.igvOut + 2.9, z: L0.igvOutStopZ + 1.5, rot: -Math.PI / 2, len: 6.5, gate: 'igvOut' },
+    { key: 'ne', x: L0.neInX + 2.9, z: L0.neStopZ + 1.5, rot: -Math.PI / 2, len: 6.5, gate: 'ne' },
+    { key: 'nw', x: L0.vnS + 3, z: L0.nwStopZ + 1.5, rot: -Math.PI / 2, len: 6.5, gate: 'nw' },
+    { key: 'scale', x: L0.exitImpX + 2.9, z: L0.scaleStopZ - 1.5, rot: -Math.PI / 2, len: 6.5, gate: 'scale' },
+    { key: 'b0', x: L0.island[0], z: L0.boothS + 1.2, rot: -Math.PI / 2, len: 6.5, booth: 0 },
+    { key: 'b1', x: L0.island[1], z: L0.boothS + 1.2, rot: Math.PI / 2, len: 6.5, booth: 1 },
+    { key: 'b2', x: L0.seps[1], z: L0.boothN - 1.2, rot: Math.PI / 2, len: 6.5, booth: 2 },
+    { key: 'b3', x: L0.seps[2], z: L0.boothN - 1.2, rot: Math.PI / 2, len: 6.5, booth: 3 },
+  ];
+  LANES.forEach((l) => BARRIERS.push({ key: 'lane' + l.no, x: L0.shed.x0 - 1.6, z: +(l.tz - 2.3).toFixed(1), rot: 0, len: 4.6, lane: l.i }));
+
   // Vùng giao cắt độc quyền: mỗi vùng là 1 hoặc nhiều hình chữ nhật [x0,x1,z0,z1]
   const ZONE_RECTS = [
     { name: 'Nhập làn cổng xuất khẩu (tây bắc)', r: [[36, 80, 2, 40]] },
@@ -287,7 +303,7 @@
     this.stampArr = new Int32Array(GW * GH); this.stamp = 1;
     this.vehicles = []; this.trailers = []; this.vmap = new Map();
     this.zones = [null]; this.events = []; this.log = [];
-    this.stats = { collisions: 0, minClear: Infinity, minClearPair: null, minStatic: Infinity, minHw: Infinity, minHwId: '', invariant: 0, maxWait: 0, maxWaitId: 0,
+    this.stats = { collisions: 0, minClear: Infinity, minClearPair: null, minStatic: Infinity, minHw: Infinity, minHwId: '', barrierViol: 0, invariant: 0, maxWait: 0, maxWaitId: 0,
       tqOut: 0, vnOut: 0, imp: 0, exp: 0, moves: 0, backhaul: 0, doubleCycle: 0, inspected: 0, thruOut: 0,
       spawned: 0, zoneWaits: 0, despawned: 0, turnaround: [] };
     this.backlog = { igv: [], ne: [], nw: [], thru: [[], [], [], []] };
@@ -513,12 +529,21 @@
   };
 
   // ------------------------------------------------------------------ phương tiện
+  // Biển số giả lập (xác định theo id, không dùng rng): xe VN 12C-123.45 (Lạng Sơn), xe TQ GX A1234Z.
+  function plateOf(kind, id, tq) {
+    const h = (Math.imul(id, 2654435761) >>> 0); const d = (n, w) => String(h % n).padStart(w, '0');
+    if (tq) return 'GX A' + d(9000, 4).replace(/^0/, '1') + 'Z';
+    const series = ['C', 'C', 'H', 'D'][h % 4];
+    const num = String((h >>> 3) % 100000).padStart(5, '0');
+    return '12' + series + '-' + num.slice(0, 3) + '.' + num.slice(3);
+  }
   Sim.prototype.makeVehicle = function (kind, job, steps, opts) {
     const v = { id: this.newId(), kind, job, steps, si: 0, s: 0, v: 0, a: 1.0, b: 2.0, vmax: 5.5,
       cells: [], zones: [], clearTo: -1, trailer: null, task: null, blocked: null,
       waitT: 0, totalWait: 0, born: this.t, broken: 0, av: false, state: 'drive', label: '', lane: -1, flags: {},
       inSlot: null, outSlot: null, ins: null, inside: false, admitted: false };
     Object.assign(v, opts || {});
+    v.plate = plateOf(kind, v.id, kind === 'tq' || kind === 'av' || (kind === 'thru' && v.thruLane >= 2));
     v.trailer = { id: this.newId(), obb: mkObb(), container: 0, cells: [] };
     return v;
   };
@@ -541,7 +566,7 @@
     if (job === 'tqImp') { v.trailer.container = this.newContainer('imp'); v.flags.inspect = this.rng() < this.sc.inspect; }
     v.steps.push(drive(this.P.igvIn, 0, this.P.igvIn.len));
     v.steps.push(task('gateIGV', (veh) => ({ dwell: 20 + this.rng() * 15, label: 'OCR + RFID cổng IGV',
-      then: () => ({ wait: () => this.dispatchTQ(veh), label: 'Chờ SIVIP xếp làn', then: () => { this.gates.igvIn = this.t + 8; } }) })));
+      then: () => ({ wait: () => this.dispatchTQ(veh), label: 'Chờ SIVIP xếp làn', then: () => { this.grant('igvIn', veh); } }) })));
     return v;
   };
   Sim.prototype.makeVN = function (job, gate) {
@@ -551,7 +576,7 @@
     v.steps.push(drive(p, 0, p.len));
     v.steps.push(task('gateVN', (veh) => ({ dwell: gate === 'ne' ? 15 + this.rng() * 10 : 25 + this.rng() * 15,
       label: gate === 'ne' ? 'OCR cổng nhập khẩu' : 'OCR + tờ khai xuất',
-      then: () => ({ wait: () => this.dispatchVN(veh), label: 'Chờ SIVIP xếp làn', then: () => { this.gates[gate] = this.t + 8; } }) })));
+      then: () => ({ wait: () => this.dispatchVN(veh), label: 'Chờ SIVIP xếp làn', then: () => { this.grant(gate, veh); } }) })));
     return v;
   };
   Sim.prototype.makeThru = function (k) {
@@ -559,7 +584,7 @@
     if (this.rng() < 0.7) v.trailer.container = this.newContainer('thru');
     v.steps.push(drive(this.P.thru[k], 0, this.P.thru[k].len));
     v.steps.push(task('booth', (veh) => ({ dwell: 15 + this.rng() * 20, label: '', then: () => {
-      this.gates.booth[k] = this.t + 6;
+      this.grant('b' + k, veh, 6);
       veh.steps.push(drive(this.P.thruTail[k], 0, this.P.thruTail[k].len));
       veh.steps.push(task('despawn', (x) => this.despawn(x)));
     } })));
@@ -662,7 +687,7 @@
       const p = buildPath([[lane.front, lane.tz], [132, lane.tz], [147, L.apronZ], [194, L.apronZ], [L.igvOut, 145], [L.igvOut, L.igvOutStopZ]]);
       v.steps.push(drive(p, 0, p.len));
       v.steps.push(task('gateOut', (veh) => ({ dwell: 8 + this.rng() * 6, label: 'OCR ra', then: () => {
-        this.gates.igvOut = this.t + 8; this.leaveInside(veh);
+        this.grant('igvOut', veh); this.leaveInside(veh);
         veh.steps.push(drive(this.P.igvOutTail, 0, this.P.igvOutTail.len));
         veh.steps.push(task('despawn', (x) => this.despawn(x)));
       } })));
@@ -670,7 +695,7 @@
       const p = buildPath([[lane.front, lane.tz], [L.exitImpX, lane.tz], [L.exitImpX, L.scaleStopZ]]);
       v.steps.push(drive(p, 0, p.len));
       v.steps.push(task('scale', (veh) => ({ dwell: 20 + this.rng() * 15, label: 'Cân + kiểm tra seal', then: () => {
-        this.gates.scale = this.t + 8; this.leaveInside(veh);
+        this.grant('scale', veh); this.leaveInside(veh);
         veh.steps.push(drive(this.P.exitTail, 0, this.P.exitTail.len));
         veh.steps.push(task('despawn', (x) => this.despawn(x)));
       } })));
@@ -806,6 +831,45 @@
     if (this._dead) { this.vehicles = this.vehicles.filter(v => !v.dead); this._dead = false; }
     this.checkCollisions();
     if (this.tick % 5 === 0) this.checkHardware();
+    if (this.tick % 2 === 0) this.checkBarriers();
+  };
+  // Trạng thái hẹn giờ / đặt chỗ của barie (chưa tính vòng từ an toàn).
+  Sim.prototype.barrierTimer = function (b) {
+    if (b.lane != null) { const l = this.lanes[b.lane]; return !!(l.by || l.occ); }
+    if (b.booth != null) return this.gates.booth[b.booth] > this.t;
+    return this.gates[b.gate] > this.t;
+  };
+  // Barie mở khi SIVIP đã cho phép (hẹn giờ / đặt chỗ) hoặc khi vòng từ an toàn thấy xe đang nằm dưới tay đòn
+  // (xe đã được cho qua nhưng đang chờ giao cắt thì barie không đóng đè lên xe).
+  // Cho xe `veh` qua barie `key`: mở tối thiểu `dur` giây và giữ mở cho tới khi chính xe đó đã qua hết tay đòn
+  // (xe có thể phải chờ giao cắt sau khi được cho qua; barie không được đóng đè lên xe).
+  Sim.prototype.grant = function (key, veh, dur) {
+    const b = BARRIERS.find(x => x.key === key);
+    const until = this.t + (dur || 8);
+    if (b.booth != null) this.gates.booth[b.booth] = until; else this.gates[b.gate] = until;
+    (this.grants || (this.grants = {}))[key] = { v: veh.id, seen: false };
+  };
+  Sim.prototype.barrierOpen = function (b) { return this.barrierTimer(b) || !!(this.barrierHold && this.barrierHold[b.key]); };
+  // Kiểm tra mỗi 0,2 s: xe chạm tay đòn khi barie đang đóng (không phải do SIVIP cho phép) = vi phạm (xe lọt barie).
+  Sim.prototype.checkBarriers = function () {
+    if (!this._arms) { this._arms = BARRIERS.map(b => ({ b, o: { cx: b.x + Math.sin(b.rot) * b.len / 2, cz: b.z + Math.cos(b.rot) * b.len / 2, ux: Math.sin(b.rot), uz: Math.cos(b.rot), hl: b.len / 2, hw: 0.2 } })); this.barrierHold = {}; }
+    const bodies = this.allBodies();
+    for (const a of this._arms) {
+      let occ = 0;
+      for (const bd of bodies) { if (Math.abs(bd.o.cx - a.o.cx) > 20 || Math.abs(bd.o.cz - a.o.cz) > 20) continue; if (obbOverlap(bd.o, a.o)) { occ = bd.vid; break; } }
+      const g = this.grants && this.grants[a.b.key];
+      if (g) {
+        const mine = bodies.some(bd => bd.vid === g.v && obbOverlap(bd.o, a.o));
+        const alive = this.vehicles.some(v => v.id === g.v && !v.dead);
+        if (mine) g.seen = true;
+        if (!alive || (g.seen && !mine)) delete this.grants[a.b.key];
+        else { if (a.b.booth != null) this.gates.booth[a.b.booth] = Math.max(this.gates.booth[a.b.booth], this.t + 1); else this.gates[a.b.gate] = Math.max(this.gates[a.b.gate], this.t + 1); }
+      }
+      const timer = this.barrierTimer(a.b), hold = this.barrierHold[a.b.key];
+      if (occ && (timer || hold)) this.barrierHold[a.b.key] = true;
+      else if (!occ) this.barrierHold[a.b.key] = false;
+      else { this.stats.barrierViol++; if (!this.firstBarrier) this.firstBarrier = { t: this.t, barrier: a.b.key, v: occ }; }
+    }
   };
   // Khoảng hở nhỏ nhất giữa thân xe và các trụ / thiết bị cố định (kiểm tra mỗi 0,5 s).
   Sim.prototype.checkHardware = function () {
@@ -993,7 +1057,7 @@
       vs.push({ id: v.id, kind: v.kind, job: v.job, fx: front[0], fz: front[1], h: Math.atan2(bs[0].uz, bs[0].ux),
         trailer: { cx: bs[1].cx, cz: bs[1].cz, h: Math.atan2(bs[1].uz, bs[1].ux), container: cont, color: cc },
         state: v.state, label: v.label, blocked: !!v.blocked && v.v === 0, broken: v.broken && this.t < v.broken, zones: v.zones.slice(), av: v.av, wait: v.waitT,
-        spd: v.v, lat: v.av ? v.lat : null, cell: v.av ? v.cell : null, dist: v.dist || 0 });
+        plate: v.plate, spd: v.v, lat: v.av ? v.lat : null, cell: v.av ? v.cell : null, dist: v.dist || 0 });
     }
     const cranes = this.cranes.map(c => ({ x: c.x, z: c.z, sy: c.sy, carry: c.carry ? (this.containers.get(c.carry) || {}).color || '#888' : null, busy: !!c.cur }));
     return { t: this.t, vehicles: vs, cranes };
@@ -1010,7 +1074,7 @@
     return { t: this.t, inside: this.inside,
       queueIGV: this.backlog.igv.length + notIn(isTQ), queueNE: this.backlog.ne.length + notIn(v => v.gate === 'ne'), queueNW: this.backlog.nw.length + notIn(v => v.gate === 'nw'),
       tqOut: s.tqOut, vnOut: s.vnOut, imp: s.imp, exp: s.exp, moves: s.moves, backhaul: s.backhaul, doubleCycle: s.doubleCycle, inspected: s.inspected, thruOut: s.thruOut,
-      collisions: s.collisions, minHw: s.minHw, minHwId: s.minHwId, minClear: s.minClear, minStatic: s.minStatic, invariant: s.invariant, maxWait: s.maxWait, zoneWaits: s.zoneWaits, avgTurn: tA,
+      collisions: s.collisions, barrierViol: s.barrierViol, minHw: s.minHw, minHwId: s.minHwId, minClear: s.minClear, minStatic: s.minStatic, invariant: s.invariant, maxWait: s.maxWait, zoneWaits: s.zoneWaits, avgTurn: tA,
       av: Object.assign({}, this.avStats, { avgLat: this.avStats.samples ? this.avStats.sumLat / this.avStats.samples : 0 }),
       deadCells: Object.keys(this.deadCells), netVer: this.netVer,
       stock: this.stockCount(), zonesLocked: this.zones.slice(1).filter(z => z.lockedBy).length,
@@ -1024,7 +1088,7 @@
   };
 
   return {
-    Sim, HW, SCENARIOS, LAYOUT, LANES, ZONE_RECTS, DT, CELL, GX0, GZ0, GW, GH, buildPath, ptAt,
+    Sim, HW, BARRIERS, SCENARIOS, LAYOUT, LANES, ZONE_RECTS, DT, CELL, GX0, GZ0, GW, GH, buildPath, ptAt,
     dims: { TRACTOR_LEN, TRACTOR_W, TRAILER_LEN, TRAILER_W, CAB_LEN, FIFTH_WHEEL, KINGPIN_FRONT, CONT_LEN, CONT_W, CONT_H, CRANE_REST_Y, TIERS },
   };
 });

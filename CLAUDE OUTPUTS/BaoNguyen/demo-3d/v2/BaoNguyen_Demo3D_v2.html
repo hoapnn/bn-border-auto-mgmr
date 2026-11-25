@@ -124,7 +124,7 @@ details.spec td:first-child { color: var(--muted); width: 32%; padding-right: 8p
   <div id="view">
     <div id="loading">Đang tải mô hình 3D…</div>
     <div id="views">
-      <button type="button" data-view="all">Toàn cảnh</button><button type="button" data-view="gate">Cổng trung tâm</button><button type="button" data-view="shed">Nhà chuyển tải</button><button type="button" data-view="igv">Vòng IGV</button><button type="button" data-view="vn">Cổng nội địa</button><button type="button" data-view="top">Nhìn từ trên</button><button type="button" data-view="net">Phủ sóng 5G</button><button type="button" data-view="sensors">Cảm biến</button>
+      <button type="button" data-view="all">Toàn cảnh</button><button type="button" data-view="gate">Cổng trung tâm</button><button type="button" data-view="shed">Nhà chuyển tải</button><button type="button" data-view="igv">Vòng IGV</button><button type="button" data-view="vn">Cổng nội địa</button><button type="button" data-view="top">Nhìn từ trên</button><button type="button" data-view="net">Phủ sóng 5G</button><button type="button" data-view="sensors">Cảm biến</button><button type="button" data-view="cp">Trạm kiểm soát (làn)</button><button type="button" data-view="cpTq">Trạm kiểm soát (cổng TQ)</button>
     </div>
     <div id="info" hidden></div>
     <div id="heatLegend">
@@ -188,7 +188,7 @@ details.spec td:first-child { color: var(--muted); width: 32%; padding-right: 8p
         <label><input type="checkbox" id="optMasts" checked> <i class="dot" style="background:#3cc8e6"></i> Trụ 5G</label>
         <label><input type="checkbox" id="optCam" checked> <i class="dot" style="background:#7fd1ff"></i> Camera</label>
         <label><input type="checkbox" id="optLidar" checked> <i class="dot" style="background:#a78bfa"></i> LiDAR cố định</label>
-        <label><input type="checkbox" id="optRfid" checked> <i class="dot" style="background:#f5a524"></i> Cổng RFID / OCR</label>
+        <label><input type="checkbox" id="optCp" checked> <i class="dot" style="background:#f5a524"></i> Trạm kiểm soát VVS (camera + RFID chung cột, biển LED)</label>
         <label><input type="checkbox" id="optRtk" checked> <i class="dot" style="background:#4cc38a"></i> Trạm gốc RTK</label>
         <label><input type="checkbox" id="optUwb" checked> <i class="dot" style="background:#ff7ab6"></i> Neo UWB</label>
         <label><input type="checkbox" id="optTl" checked> <i class="dot" style="background:#f2c14e"></i> Đèn tín hiệu giao cắt</label>
@@ -375,13 +375,9 @@ details.spec td:first-child { color: var(--muted); width: 32%; padding-right: 8p
   const DEVICES = [
     // --- Camera giám sát + nhận dạng
     { id: 'CAM-01', kind: 'cam', name: 'Camera toàn cảnh cổng trung tâm', x: 205.5, z: 168, h: 9, fov: 'PTZ 4K, zoom 30×', role: 'Giám sát làn IGV vào/ra, đọc biển số xe thông quan thường.' },
-    { id: 'CAM-02', kind: 'cam', name: 'Camera cổng IGV', x: 198.7, z: 222, h: 6.5, fov: '2 × 8 MP cố định', role: 'Chụp xe và container tại cổng kiểm soát IGV, đối chiếu OCR.' },
     { id: 'CAM-03', kind: 'cam', name: 'Camera lối vào nhà chuyển tải (tây)', x: 87, z: 142, h: 9, fov: 'PTZ 4K', role: 'Quan sát 4 làn IGV khi xe vào; hình ảnh cho người giám sát từ xa.' },
     { id: 'CAM-04', kind: 'cam', name: 'Camera nhà chuyển tải (tây-bắc)', x: 87, z: 104, h: 9, fov: 'PTZ 4K', role: 'Quan sát 4 làn xe nội địa.' },
     { id: 'CAM-05', kind: 'cam', name: 'Camera cầu trục phía đông', x: 129.5, z: 124, h: 11, fov: '4 × 8 MP', role: 'Nhìn xuống ô chờ container, đọc mã container, phát hiện người vào vùng nâng hạ.' },
-    { id: 'CAM-06', kind: 'cam', name: 'Camera cổng xuất khẩu (tây bắc)', x: 56, z: -2, h: 7, fov: '2 × 8 MP', role: 'Đọc biển số, mã container xe VN chở hàng xuất.' },
-    { id: 'CAM-07', kind: 'cam', name: 'Camera cổng nhập khẩu (đông bắc)', x: 193, z: 6, h: 7, fov: '2 × 8 MP', role: 'Đọc biển số xe VN đến nhận hàng nhập.' },
-    { id: 'CAM-08', kind: 'cam', name: 'Camera trạm cân', x: 195.5, z: 52, h: 6, fov: '2 × 5 MP', role: 'Ghi hình xe và seal khi cân.' },
     { id: 'CAM-09', kind: 'cam', name: 'Camera khu kiểm hoá', x: 95, z: 205, h: 8, fov: 'PTZ 4K', role: 'Giám sát khu kiểm hoá Hải quan (giả định đặt ở bãi 11 ô tây nam).' },
     { id: 'CAM-10', kind: 'cam', name: 'Camera vòng IGV phía tây', x: 52, z: 170, h: 9, fov: 'PTZ 4K', role: 'Quan sát góc vòng IGV phía tây nam.' },
     { id: 'CAM-11', kind: 'cam', name: 'Camera ranh giới phía nam', x: 150, z: 227, h: 9, fov: 'PTZ nhiệt + ánh sáng', role: 'Giám sát ranh giới phía nam, phát hiện xâm nhập ban đêm.' },
@@ -394,12 +390,6 @@ details.spec td:first-child { color: var(--muted); width: 32%; padding-right: 8p
     { id: 'LID-05', kind: 'lidar', zone: 5, name: 'LiDAR vùng giao cắt 5 (rẽ vào làn IGV)', x: 43, z: 150, h: 10, fov: '360°, tầm 80 m', role: 'Giám sát chỗ IGV rẽ vào 4 làn nhà chuyển tải.' },
     { id: 'LID-06', kind: 'lidar', zone: 6, name: 'LiDAR vùng giao cắt 6 (ra nhà chuyển tải, IGV)', x: 140, z: 128, h: 10, fov: '360°, tầm 80 m', role: 'Giám sát lối ra làn IGV; bổ sung cho xe khi GNSS yếu gần mái nhà.' },
     { id: 'LID-07', kind: 'lidar', zone: 7, name: 'LiDAR vùng giao cắt 7 (nhập làn sau kiểm hoá)', x: 44, z: 198, h: 10, fov: '360°, tầm 80 m', role: 'Giám sát chỗ nhập vòng IGV sau khu kiểm hoá.' },
-    // --- Cổng RFID / OCR
-    { id: 'RFID-01', kind: 'rfid', name: 'Cổng IGV vào · OCR + RFID', x: 193.0, z: 216, h: 6.5, fov: 'Đọc 20–35 s', role: 'Đọc mã container, biển số, thẻ RFID IGV; đối chiếu lệnh SIVIP rồi mở barie.' },
-    { id: 'RFID-02', kind: 'rfid', name: 'Cổng IGV ra · OCR + RFID', x: 204.4, z: 216, h: 6.5, fov: 'Đọc 20–35 s', role: 'Kiểm soát xe TQ rời bãi, đối chiếu container đã giao nhận.' },
-    { id: 'RFID-03', kind: 'rfid', name: 'Cổng nhập khẩu · OCR biển số', x: 199.0, z: 1, h: 6, fov: 'Đọc < 3 s', role: 'Nhận dạng xe VN được SIVIP gọi, mở barie đông bắc.' },
-    { id: 'RFID-04', kind: 'rfid', name: 'Cổng xuất khẩu · OCR + tờ khai', x: 56.8, z: -6, h: 6, fov: 'Đọc < 3 s', role: 'Nhận dạng xe VN chở hàng xuất, đối chiếu tờ khai.' },
-    { id: 'RFID-05', kind: 'rfid', name: 'Trạm cân ra · OCR seal', x: 194.4, z: 44, h: 5.5, fov: 'Đọc < 5 s', role: 'Cân xe và kiểm tra seal container trước khi ra.' },
     // --- Trạm gốc RTK (tăng độ chính xác GNSS cho IGV ngoài trời)
     { id: 'RTK-01', kind: 'rtk', name: 'Trạm gốc RTK-01 · mái khối cổng trái', x: 174, z: 185, h: 25, fov: 'GNSS đa hệ, phủ ~10 km', role: 'Phát số hiệu chỉnh RTK cho IGV; đặt nơi thoáng trời, nền chắc.' },
     { id: 'RTK-02', kind: 'rtk', name: 'Trạm gốc RTK-02 · mái nhà chuyển tải', x: 93, z: 90, h: 19.5, fov: 'GNSS đa hệ, phủ ~10 km', role: 'Trạm dự phòng thứ hai, hai trạm so chéo để phát hiện lệch.' },
@@ -417,6 +407,58 @@ details.spec td:first-child { color: var(--muted); width: 32%; padding-right: 8p
     { id: 'TL-07', kind: 'tl', zone: 7, name: 'Đèn tín hiệu vùng giao cắt 7', x: 50, z: 214.5, h: 5, fov: 'Đèn 3 màu + V2X', role: 'Như trên, chỗ nhập vòng IGV sau kiểm hoá.' },
   ];
 
+  // ------------------------------------------------------------------ 4) Hạng mục VVS: trạm kiểm soát cổng
+  // Mỗi trạm là MỘT cột duy nhất mang camera kiểm soát + đầu đọc RFID (cùng vị trí), biển LED báo biển số + ngày giờ,
+  // và barie bên cạnh. Barie của cổng TQ / cổng VN / trạm cân / đường xuyên biên giới là barie có sẵn trong mô hình (sim-core BARRIERS);
+  // barie 8 làn nhà chuyển tải là barie mới đặt ở đầu mỗi làn. face = hướng biển LED quay về phía xe đang tới.
+  // trig = [x, z, bán kính]: điểm xe dừng trước barie và bán kính nhận diện của camera/RFID.
+  const FW = { n: [0, -1], s: [0, 1], e: [1, 0], w: [-1, 0] };
+  const CHECKPOINTS = [
+    // Cổng TQ (làn IGV)
+    { id: 'CP-TQ1', group: 'tq', name: 'Cổng IGV vào (cổng TQ)', x: 193.0, z: 216, face: FW.s, trig: [195.4, 214, 9], barrier: 'igvIn',
+      role: 'Đọc thẻ RFID của IGV / xe TQ và chụp biển số, mã container; đối chiếu lệnh SIVIP rồi mở barie.' },
+    { id: 'CP-TQ2', group: 'tq', name: 'Cổng IGV ra (cổng TQ)', x: 204.4, z: 216, face: FW.n, trig: [202, 222, 9], barrier: 'igvOut',
+      role: 'Đọc xe TQ rời bãi, đối chiếu container đã giao nhận trước khi mở barie ra Km0.' },
+    // Cổng VN và trạm cân
+    { id: 'CP-VN1', group: 'vn', name: 'Cổng nhập khẩu (đông bắc)', x: 199.0, z: 1, face: FW.n, trig: [196.5, 4, 12], barrier: 'ne',
+      role: 'Nhận dạng xe VN được SIVIP gọi đến nhận hàng nhập, mở barie đông bắc.' },
+    { id: 'CP-VN2', group: 'vn', name: 'Cổng xuất khẩu (tây bắc)', x: 56.8, z: -6, face: FW.n, trig: [60, -4, 12], barrier: 'nw',
+      role: 'Nhận dạng xe VN chở hàng xuất, đối chiếu tờ khai rồi mở barie tây bắc.' },
+    { id: 'CP-VN3', group: 'scale', name: 'Trạm cân ra', x: 194.4, z: 44, face: FW.s, trig: [190.8, 40, 9], barrier: 'scale',
+      role: 'Cân xe, đọc seal container và biển số trước khi cho xe có hàng ra.' },
+    // Đường xuyên biên giới (cổng trung tâm): 4 làn xe thông quan thường
+    { id: 'CP-XB1', group: 'xb', name: 'Đường xuyên biên giới · làn 1 (VN → TQ)', x: 213.3, z: 191.6, face: FW.n, trig: [211, 193.5, 5], barrier: 'b0',
+      role: 'Đọc xe thông quan thường đi từ VN sang TQ. Barie này nằm ngoài phạm vi điều phối của bãi nhưng dùng chung thiết bị VVS.' },
+    { id: 'CP-XB2', group: 'xb', name: 'Đường xuyên biên giới · làn 2 (VN → TQ)', x: 217.0, z: 191.6, face: FW.n, trig: [219.7, 193.5, 5], barrier: 'b1', role: 'Như làn 1.' },
+    { id: 'CP-XB3', group: 'xb', name: 'Đường xuyên biên giới · làn 3 (TQ → VN)', x: 222.6, z: 176.8, face: FW.s, trig: [226.5, 178, 5], barrier: 'b2', role: 'Đọc xe thông quan thường đi từ TQ sang VN.' },
+    { id: 'CP-XB4', group: 'xb', name: 'Đường xuyên biên giới · làn 4 (TQ → VN)', x: 231.2, z: 176.8, face: FW.s, trig: [233.5, 178, 5], barrier: 'b3', role: 'Như làn 3.' },
+  ];
+  // 8 làn nhà chuyển tải: cột ở mép bắc của làn, barie ngay cạnh, cùng nằm ở đầu làn phía tây (x = 88–89)
+  const LANE_TZ = [90.9, 99.8, 108.3, 116.7, 127.6, 136.1, 144.4, 152.9];   // = tim làn (sim-core: zc − 1,5)
+  LANE_TZ.forEach((tz, i) => CHECKPOINTS.push({
+    id: 'CP-L' + (i + 1), group: 'lane', lane: i, name: 'Làn ' + (i + 1) + (i < 4 ? ' (xe nội địa)' : ' (IGV / xe TQ)') + ' · nhà chuyển tải',
+    x: 88.3, z: +(tz - 4.2).toFixed(1), face: FW.w, trig: [88.5, tz, 6], barrier: 'lane' + (i + 1), post: [89.0, +(tz - 2.3).toFixed(1)],
+    role: 'Nhận dạng xe vào làn ' + (i + 1) + ' (đối chiếu làn SIVIP đã xếp) rồi mở barie; sau đó cầu trục mới nâng / hạ container.' }));
+
+  // Thông số thiết bị (giả định theo ngành; thay bằng datasheet khi chốt; không có giá)
+  const CP_SPEC = {
+    pole: { title: 'Cột chung', rows: [['Kiểu', 'Cột thép mạ kẽm cao 7 m, bệ bê tông; mang camera, đầu đọc RFID và biển LED trên cùng một cột'], ['Cấp bảo vệ', 'IP66, chống sét lan truyền, tiếp địa ≤ 4 Ω']] },
+    camera: { title: 'Camera kiểm soát', rows: [['Loại', '1 camera ALPR + 1 camera tổng quan, 8 MP, đèn hồng ngoại, HDR'], ['Độ cao lắp', '6,8 m, hướng xuống làn xe'], ['Chức năng', 'Đọc biển số (ANPR), chụp mã container, ảnh bằng chứng gắn mốc thời gian'], ['Đầu ra', 'Luồng RTSP + sự kiện đọc biển số (JSON) gửi lên SIVIP']] },
+    rfid: { title: 'Đầu đọc RFID', rows: [['Loại', 'UHF 860–960 MHz, EPC Gen2, 4 cổng ăng-ten phân cực tròn'], ['Độ cao lắp', '6,0 m, cùng cột với camera, hướng xuống làn'], ['Tầm đọc', '6–12 m, đọc được xe đang chạy ≤ 20 km/h'], ['Thẻ', 'Thẻ dán kính xe VN / thẻ IGV; thẻ gắn container nếu có'], ['Đầu ra', 'Sự kiện đọc thẻ (EPC, RSSI, thời điểm) cùng mã camera']] },
+    led: { title: 'Biển LED', rows: [['Loại', 'LED full-color ngoài trời P10, 3,0 × 1,0 m, độ sáng ≥ 5 000 cd/m², tự chỉnh theo ánh sáng'], ['Độ cao lắp', '4,5–5,5 m (phía trên container cao 4,05 m)'], ['Nội dung', 'Dòng 1: biển số xe; dòng 2: ngày giờ; dòng 3: trạng thái (ĐANG ĐỌC, MỜI QUA, DỪNG)'], ['Điều khiển', 'Nhận lệnh từ SIVIP qua mạng; mất kết nối thì hiện "DỪNG – CHỜ NHÂN VIÊN"']] },
+    barrier: { title: 'Barie', rows: [['Loại', 'Barie tay đòn điện, tay đòn 4,5–6,5 m, mở/đóng ~1,5 s, có cảm biến vòng từ + chùm tia chống đập xe'], ['Quy tắc', 'Chỉ mở khi SIVIP đã đặt được ô / làn / vị trí cho xe; tự đóng khi xe đã qua'], ['Điều khiển', 'Tủ điều khiển tại cổng, nhận lệnh SIVIP; mất mạng thì giữ đóng, nhân viên mở tay']] },
+    link: { title: 'Kết nối', rows: [['Mạng', 'Cáp quang từ tủ cổng về phòng máy; trong tủ cổng switch công nghiệp PoE+ (camera, đầu đọc RFID), I/O module (barie, vòng từ), bộ điều khiển biển LED'], ['Phân vùng', 'VLAN riêng cho thiết bị kiểm soát cổng, tách khỏi mạng 5G của IGV'], ['Giao thức', 'ONVIF/RTSP (camera), LLRP (đầu đọc RFID), Modbus-TCP hoặc dry contact (barie), API SIVIP (sự kiện, lệnh)'], ['Nguồn', 'Điện lưới + UPS 30 phút tại tủ cổng']] },
+  };
+
+  // Biển LED: định dạng nội dung hiển thị. t = giây mô phỏng; ngày demo giả định 25/03/2027, ca bắt đầu 06:00.
+  const DEMO_DATE = '25/03/2027';
+  function ledTime(t) { const s = Math.floor(t) + 6 * 3600; const p = (n) => String(n).padStart(2, '0'); return `${p(Math.floor(s / 3600) % 24)}:${p(Math.floor(s / 60) % 60)}:${p(s % 60)}`; }
+  // state: 'idle' | 'read' (đã đọc, barie đóng) | 'open'
+  function ledFormat(plate, t, state) {
+    if (state === 'idle' || !plate) return { l1: 'SẴN SÀNG', l2: DEMO_DATE + ' ' + ledTime(t), l3: '' };
+    return { l1: plate, l2: DEMO_DATE + ' ' + ledTime(t), l3: state === 'open' ? 'MỜI QUA' : 'ĐANG ĐỌC · DỪNG' };
+  }
+
   // Nam châm sàn + transponder: tính từ các tuyến IGV (sim-core.routes) khi dựng. Mô tả chung ở đây.
   const MAG = {
     name: 'Nam châm sàn (magnetic marker)',
@@ -429,7 +471,7 @@ details.spec td:first-child { color: var(--muted); width: 32%; padding-right: 8p
   };
 
   const KIND_INFO = {
-    cam: { name: 'Camera', color: '#7fd1ff' }, lidar: { name: 'LiDAR cố định', color: '#a78bfa' }, rfid: { name: 'Cổng RFID/OCR', color: '#f5a524' },
+    cam: { name: 'Camera', color: '#7fd1ff' }, lidar: { name: 'LiDAR cố định', color: '#a78bfa' }, cp: { name: 'Trạm kiểm soát VVS (camera + RFID chung cột)', color: '#f5a524' },
     rtk: { name: 'Trạm gốc RTK', color: '#4cc38a' }, uwb: { name: 'Neo UWB', color: '#ff7ab6' }, tl: { name: 'Đèn tín hiệu', color: '#f2c14e' },
     mag: { name: 'Nam châm sàn / transponder', color: '#d9e2ea' }, '5g': { name: 'Trụ 5G', color: '#3cc8e6' },
   };
@@ -438,10 +480,11 @@ details.spec td:first-child { color: var(--muted); width: 32%; padding-right: 8p
   function solids() {
     const out = CELLS.map(c => ({ id: c.id, x: c.x, z: c.z, r: c.type === 'indoor' ? 0.2 : 0.5 }));
     for (const d of DEVICES) if (d.kind !== 'uwb' && d.kind !== 'rtk') out.push({ id: d.id, x: d.x, z: d.z, r: 0.25 });
+    for (const c of CHECKPOINTS) { out.push({ id: c.id, x: c.x, z: c.z, r: 0.3 }); if (c.post) out.push({ id: c.id + '-barie', x: c.post[0], z: c.post[1], r: 0.3 }); }
     return out;
   }
 
-  return { IGV, socOf, solids, CELLS, OBSTACLES, cellLatency, serving, speedFactor, extraGap, latClass, DEVICES, MAG, TAG, KIND_INFO, segHitsRect, inRect };
+  return { IGV, socOf, solids, CHECKPOINTS, CP_SPEC, ledFormat, ledTime, DEMO_DATE, LANE_TZ, CELLS, OBSTACLES, cellLatency, serving, speedFactor, extraGap, latClass, DEVICES, MAG, TAG, KIND_INFO, segHitsRect, inRect };
 });
 
 </script>
@@ -544,6 +587,22 @@ details.spec td:first-child { color: var(--muted); width: 32%; padding-right: 8p
     const half = LAYOUT.laneHalf[i]; const front = LAYOUT.stopFront[half];
     return { i, no: i + 1, type: i < 4 ? 'vn' : 'tq', half, zc, tz: zc - 1.5, sz: zc + 1.9, front, cx: front - CONT_BACK };
   });
+
+  // Barie (hạng mục VVS): post = (x, z) chân trụ, rot = hướng tay đòn (rad, quanh trục y; tay đòn chạy theo (sin rot, cos rot)),
+  // len = chiều dài tay đòn. Mở khi: cổng → SIVIP đã đặt được ô / làn (gates[...] > t); làn nhà chuyển tải → làn đã có xe đặt chỗ.
+  const L0 = LAYOUT;
+  const BARRIERS = [
+    { key: 'igvIn', x: L0.igvIn - 2.9, z: L0.igvInStopZ - 1.5, rot: Math.PI / 2, len: 6.5, gate: 'igvIn' },
+    { key: 'igvOut', x: L0.igvOut + 2.9, z: L0.igvOutStopZ + 1.5, rot: -Math.PI / 2, len: 6.5, gate: 'igvOut' },
+    { key: 'ne', x: L0.neInX + 2.9, z: L0.neStopZ + 1.5, rot: -Math.PI / 2, len: 6.5, gate: 'ne' },
+    { key: 'nw', x: L0.vnS + 3, z: L0.nwStopZ + 1.5, rot: -Math.PI / 2, len: 6.5, gate: 'nw' },
+    { key: 'scale', x: L0.exitImpX + 2.9, z: L0.scaleStopZ - 1.5, rot: -Math.PI / 2, len: 6.5, gate: 'scale' },
+    { key: 'b0', x: L0.island[0], z: L0.boothS + 1.2, rot: -Math.PI / 2, len: 6.5, booth: 0 },
+    { key: 'b1', x: L0.island[1], z: L0.boothS + 1.2, rot: Math.PI / 2, len: 6.5, booth: 1 },
+    { key: 'b2', x: L0.seps[1], z: L0.boothN - 1.2, rot: Math.PI / 2, len: 6.5, booth: 2 },
+    { key: 'b3', x: L0.seps[2], z: L0.boothN - 1.2, rot: Math.PI / 2, len: 6.5, booth: 3 },
+  ];
+  LANES.forEach((l) => BARRIERS.push({ key: 'lane' + l.no, x: L0.shed.x0 - 1.6, z: +(l.tz - 2.3).toFixed(1), rot: 0, len: 4.6, lane: l.i }));
 
   // Vùng giao cắt độc quyền: mỗi vùng là 1 hoặc nhiều hình chữ nhật [x0,x1,z0,z1]
   const ZONE_RECTS = [
@@ -735,7 +794,7 @@ details.spec td:first-child { color: var(--muted); width: 32%; padding-right: 8p
     this.stampArr = new Int32Array(GW * GH); this.stamp = 1;
     this.vehicles = []; this.trailers = []; this.vmap = new Map();
     this.zones = [null]; this.events = []; this.log = [];
-    this.stats = { collisions: 0, minClear: Infinity, minClearPair: null, minStatic: Infinity, minHw: Infinity, minHwId: '', invariant: 0, maxWait: 0, maxWaitId: 0,
+    this.stats = { collisions: 0, minClear: Infinity, minClearPair: null, minStatic: Infinity, minHw: Infinity, minHwId: '', barrierViol: 0, invariant: 0, maxWait: 0, maxWaitId: 0,
       tqOut: 0, vnOut: 0, imp: 0, exp: 0, moves: 0, backhaul: 0, doubleCycle: 0, inspected: 0, thruOut: 0,
       spawned: 0, zoneWaits: 0, despawned: 0, turnaround: [] };
     this.backlog = { igv: [], ne: [], nw: [], thru: [[], [], [], []] };
@@ -961,12 +1020,21 @@ details.spec td:first-child { color: var(--muted); width: 32%; padding-right: 8p
   };
 
   // ------------------------------------------------------------------ phương tiện
+  // Biển số giả lập (xác định theo id, không dùng rng): xe VN 12C-123.45 (Lạng Sơn), xe TQ GX A1234Z.
+  function plateOf(kind, id, tq) {
+    const h = (Math.imul(id, 2654435761) >>> 0); const d = (n, w) => String(h % n).padStart(w, '0');
+    if (tq) return 'GX A' + d(9000, 4).replace(/^0/, '1') + 'Z';
+    const series = ['C', 'C', 'H', 'D'][h % 4];
+    const num = String((h >>> 3) % 100000).padStart(5, '0');
+    return '12' + series + '-' + num.slice(0, 3) + '.' + num.slice(3);
+  }
   Sim.prototype.makeVehicle = function (kind, job, steps, opts) {
     const v = { id: this.newId(), kind, job, steps, si: 0, s: 0, v: 0, a: 1.0, b: 2.0, vmax: 5.5,
       cells: [], zones: [], clearTo: -1, trailer: null, task: null, blocked: null,
       waitT: 0, totalWait: 0, born: this.t, broken: 0, av: false, state: 'drive', label: '', lane: -1, flags: {},
       inSlot: null, outSlot: null, ins: null, inside: false, admitted: false };
     Object.assign(v, opts || {});
+    v.plate = plateOf(kind, v.id, kind === 'tq' || kind === 'av' || (kind === 'thru' && v.thruLane >= 2));
     v.trailer = { id: this.newId(), obb: mkObb(), container: 0, cells: [] };
     return v;
   };
@@ -989,7 +1057,7 @@ details.spec td:first-child { color: var(--muted); width: 32%; padding-right: 8p
     if (job === 'tqImp') { v.trailer.container = this.newContainer('imp'); v.flags.inspect = this.rng() < this.sc.inspect; }
     v.steps.push(drive(this.P.igvIn, 0, this.P.igvIn.len));
     v.steps.push(task('gateIGV', (veh) => ({ dwell: 20 + this.rng() * 15, label: 'OCR + RFID cổng IGV',
-      then: () => ({ wait: () => this.dispatchTQ(veh), label: 'Chờ SIVIP xếp làn', then: () => { this.gates.igvIn = this.t + 8; } }) })));
+      then: () => ({ wait: () => this.dispatchTQ(veh), label: 'Chờ SIVIP xếp làn', then: () => { this.grant('igvIn', veh); } }) })));
     return v;
   };
   Sim.prototype.makeVN = function (job, gate) {
@@ -999,7 +1067,7 @@ details.spec td:first-child { color: var(--muted); width: 32%; padding-right: 8p
     v.steps.push(drive(p, 0, p.len));
     v.steps.push(task('gateVN', (veh) => ({ dwell: gate === 'ne' ? 15 + this.rng() * 10 : 25 + this.rng() * 15,
       label: gate === 'ne' ? 'OCR cổng nhập khẩu' : 'OCR + tờ khai xuất',
-      then: () => ({ wait: () => this.dispatchVN(veh), label: 'Chờ SIVIP xếp làn', then: () => { this.gates[gate] = this.t + 8; } }) })));
+      then: () => ({ wait: () => this.dispatchVN(veh), label: 'Chờ SIVIP xếp làn', then: () => { this.grant(gate, veh); } }) })));
     return v;
   };
   Sim.prototype.makeThru = function (k) {
@@ -1007,7 +1075,7 @@ details.spec td:first-child { color: var(--muted); width: 32%; padding-right: 8p
     if (this.rng() < 0.7) v.trailer.container = this.newContainer('thru');
     v.steps.push(drive(this.P.thru[k], 0, this.P.thru[k].len));
     v.steps.push(task('booth', (veh) => ({ dwell: 15 + this.rng() * 20, label: '', then: () => {
-      this.gates.booth[k] = this.t + 6;
+      this.grant('b' + k, veh, 6);
       veh.steps.push(drive(this.P.thruTail[k], 0, this.P.thruTail[k].len));
       veh.steps.push(task('despawn', (x) => this.despawn(x)));
     } })));
@@ -1110,7 +1178,7 @@ details.spec td:first-child { color: var(--muted); width: 32%; padding-right: 8p
       const p = buildPath([[lane.front, lane.tz], [132, lane.tz], [147, L.apronZ], [194, L.apronZ], [L.igvOut, 145], [L.igvOut, L.igvOutStopZ]]);
       v.steps.push(drive(p, 0, p.len));
       v.steps.push(task('gateOut', (veh) => ({ dwell: 8 + this.rng() * 6, label: 'OCR ra', then: () => {
-        this.gates.igvOut = this.t + 8; this.leaveInside(veh);
+        this.grant('igvOut', veh); this.leaveInside(veh);
         veh.steps.push(drive(this.P.igvOutTail, 0, this.P.igvOutTail.len));
         veh.steps.push(task('despawn', (x) => this.despawn(x)));
       } })));
@@ -1118,7 +1186,7 @@ details.spec td:first-child { color: var(--muted); width: 32%; padding-right: 8p
       const p = buildPath([[lane.front, lane.tz], [L.exitImpX, lane.tz], [L.exitImpX, L.scaleStopZ]]);
       v.steps.push(drive(p, 0, p.len));
       v.steps.push(task('scale', (veh) => ({ dwell: 20 + this.rng() * 15, label: 'Cân + kiểm tra seal', then: () => {
-        this.gates.scale = this.t + 8; this.leaveInside(veh);
+        this.grant('scale', veh); this.leaveInside(veh);
         veh.steps.push(drive(this.P.exitTail, 0, this.P.exitTail.len));
         veh.steps.push(task('despawn', (x) => this.despawn(x)));
       } })));
@@ -1254,6 +1322,45 @@ details.spec td:first-child { color: var(--muted); width: 32%; padding-right: 8p
     if (this._dead) { this.vehicles = this.vehicles.filter(v => !v.dead); this._dead = false; }
     this.checkCollisions();
     if (this.tick % 5 === 0) this.checkHardware();
+    if (this.tick % 2 === 0) this.checkBarriers();
+  };
+  // Trạng thái hẹn giờ / đặt chỗ của barie (chưa tính vòng từ an toàn).
+  Sim.prototype.barrierTimer = function (b) {
+    if (b.lane != null) { const l = this.lanes[b.lane]; return !!(l.by || l.occ); }
+    if (b.booth != null) return this.gates.booth[b.booth] > this.t;
+    return this.gates[b.gate] > this.t;
+  };
+  // Barie mở khi SIVIP đã cho phép (hẹn giờ / đặt chỗ) hoặc khi vòng từ an toàn thấy xe đang nằm dưới tay đòn
+  // (xe đã được cho qua nhưng đang chờ giao cắt thì barie không đóng đè lên xe).
+  // Cho xe `veh` qua barie `key`: mở tối thiểu `dur` giây và giữ mở cho tới khi chính xe đó đã qua hết tay đòn
+  // (xe có thể phải chờ giao cắt sau khi được cho qua; barie không được đóng đè lên xe).
+  Sim.prototype.grant = function (key, veh, dur) {
+    const b = BARRIERS.find(x => x.key === key);
+    const until = this.t + (dur || 8);
+    if (b.booth != null) this.gates.booth[b.booth] = until; else this.gates[b.gate] = until;
+    (this.grants || (this.grants = {}))[key] = { v: veh.id, seen: false };
+  };
+  Sim.prototype.barrierOpen = function (b) { return this.barrierTimer(b) || !!(this.barrierHold && this.barrierHold[b.key]); };
+  // Kiểm tra mỗi 0,2 s: xe chạm tay đòn khi barie đang đóng (không phải do SIVIP cho phép) = vi phạm (xe lọt barie).
+  Sim.prototype.checkBarriers = function () {
+    if (!this._arms) { this._arms = BARRIERS.map(b => ({ b, o: { cx: b.x + Math.sin(b.rot) * b.len / 2, cz: b.z + Math.cos(b.rot) * b.len / 2, ux: Math.sin(b.rot), uz: Math.cos(b.rot), hl: b.len / 2, hw: 0.2 } })); this.barrierHold = {}; }
+    const bodies = this.allBodies();
+    for (const a of this._arms) {
+      let occ = 0;
+      for (const bd of bodies) { if (Math.abs(bd.o.cx - a.o.cx) > 20 || Math.abs(bd.o.cz - a.o.cz) > 20) continue; if (obbOverlap(bd.o, a.o)) { occ = bd.vid; break; } }
+      const g = this.grants && this.grants[a.b.key];
+      if (g) {
+        const mine = bodies.some(bd => bd.vid === g.v && obbOverlap(bd.o, a.o));
+        const alive = this.vehicles.some(v => v.id === g.v && !v.dead);
+        if (mine) g.seen = true;
+        if (!alive || (g.seen && !mine)) delete this.grants[a.b.key];
+        else { if (a.b.booth != null) this.gates.booth[a.b.booth] = Math.max(this.gates.booth[a.b.booth], this.t + 1); else this.gates[a.b.gate] = Math.max(this.gates[a.b.gate], this.t + 1); }
+      }
+      const timer = this.barrierTimer(a.b), hold = this.barrierHold[a.b.key];
+      if (occ && (timer || hold)) this.barrierHold[a.b.key] = true;
+      else if (!occ) this.barrierHold[a.b.key] = false;
+      else { this.stats.barrierViol++; if (!this.firstBarrier) this.firstBarrier = { t: this.t, barrier: a.b.key, v: occ }; }
+    }
   };
   // Khoảng hở nhỏ nhất giữa thân xe và các trụ / thiết bị cố định (kiểm tra mỗi 0,5 s).
   Sim.prototype.checkHardware = function () {
@@ -1441,7 +1548,7 @@ details.spec td:first-child { color: var(--muted); width: 32%; padding-right: 8p
       vs.push({ id: v.id, kind: v.kind, job: v.job, fx: front[0], fz: front[1], h: Math.atan2(bs[0].uz, bs[0].ux),
         trailer: { cx: bs[1].cx, cz: bs[1].cz, h: Math.atan2(bs[1].uz, bs[1].ux), container: cont, color: cc },
         state: v.state, label: v.label, blocked: !!v.blocked && v.v === 0, broken: v.broken && this.t < v.broken, zones: v.zones.slice(), av: v.av, wait: v.waitT,
-        spd: v.v, lat: v.av ? v.lat : null, cell: v.av ? v.cell : null, dist: v.dist || 0 });
+        plate: v.plate, spd: v.v, lat: v.av ? v.lat : null, cell: v.av ? v.cell : null, dist: v.dist || 0 });
     }
     const cranes = this.cranes.map(c => ({ x: c.x, z: c.z, sy: c.sy, carry: c.carry ? (this.containers.get(c.carry) || {}).color || '#888' : null, busy: !!c.cur }));
     return { t: this.t, vehicles: vs, cranes };
@@ -1458,7 +1565,7 @@ details.spec td:first-child { color: var(--muted); width: 32%; padding-right: 8p
     return { t: this.t, inside: this.inside,
       queueIGV: this.backlog.igv.length + notIn(isTQ), queueNE: this.backlog.ne.length + notIn(v => v.gate === 'ne'), queueNW: this.backlog.nw.length + notIn(v => v.gate === 'nw'),
       tqOut: s.tqOut, vnOut: s.vnOut, imp: s.imp, exp: s.exp, moves: s.moves, backhaul: s.backhaul, doubleCycle: s.doubleCycle, inspected: s.inspected, thruOut: s.thruOut,
-      collisions: s.collisions, minHw: s.minHw, minHwId: s.minHwId, minClear: s.minClear, minStatic: s.minStatic, invariant: s.invariant, maxWait: s.maxWait, zoneWaits: s.zoneWaits, avgTurn: tA,
+      collisions: s.collisions, barrierViol: s.barrierViol, minHw: s.minHw, minHwId: s.minHwId, minClear: s.minClear, minStatic: s.minStatic, invariant: s.invariant, maxWait: s.maxWait, zoneWaits: s.zoneWaits, avgTurn: tA,
       av: Object.assign({}, this.avStats, { avgLat: this.avStats.samples ? this.avStats.sumLat / this.avStats.samples : 0 }),
       deadCells: Object.keys(this.deadCells), netVer: this.netVer,
       stock: this.stockCount(), zonesLocked: this.zones.slice(1).filter(z => z.lockedBy).length,
@@ -1472,7 +1579,7 @@ details.spec td:first-child { color: var(--muted); width: 32%; padding-right: 8p
   };
 
   return {
-    Sim, HW, SCENARIOS, LAYOUT, LANES, ZONE_RECTS, DT, CELL, GX0, GZ0, GW, GH, buildPath, ptAt,
+    Sim, HW, BARRIERS, SCENARIOS, LAYOUT, LANES, ZONE_RECTS, DT, CELL, GX0, GZ0, GW, GH, buildPath, ptAt,
     dims: { TRACTOR_LEN, TRACTOR_W, TRAILER_LEN, TRAILER_W, CAB_LEN, FIFTH_WHEEL, KINGPIN_FRONT, CONT_LEN, CONT_W, CONT_H, CRANE_REST_Y, TIERS },
   };
 });
@@ -1534,6 +1641,8 @@ window.PLAN_IMG = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAkGBw
     vn: { p: [105, 120, -95], t: [120, 0, 55] },
     top: { p: [140, 520, 129], t: [140, 0, 128] },
     net: { p: [150, 560, 130], t: [150, 0, 128] },
+    cp: { p: [66, 12, 125], t: [90, 4, 122] },
+    cpTq: { p: [180, 12, 232], t: [198, 4, 216] },
     sensors: { p: [150, 190, 330], t: [140, 0, 125] },
   };
   function setView(k) { const v = VIEWS[k]; camera.position.set(...v.p); controls.target.set(...v.t); controls.update(); }
@@ -1702,22 +1811,14 @@ window.PLAN_IMG = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAkGBw
   add(box(L.scaleNE[1] - L.scaleNE[0], 0.25, L.scaleNE[3] - L.scaleNE[2], mat.scale), (L.scaleNE[0] + L.scaleNE[1]) / 2, 0.12, (L.scaleNE[2] + L.scaleNE[3]) / 2);
   add(box(L.scaleNW[1] - L.scaleNW[0], 0.25, L.scaleNW[3] - L.scaleNW[2], mat.scale), (L.scaleNW[0] + L.scaleNW[1]) / 2, 0.12, (L.scaleNW[2] + L.scaleNW[3]) / 2);
   const barriers = {};
-  function barrier(key, x, z, rotY) {
-    const g = new THREE.Group(); g.position.set(x, 1.1, z);
+  function barrier(def) {
+    const g = new THREE.Group(); g.position.set(def.x, 1.1, def.z);
     g.add(box(0.6, 2.2, 0.6, mat.steel));
-    const arm = new THREE.Group(); const a = box(0.25, 0.25, 6.5, M('#f2f2f2')); a.position.z = 3.25; arm.add(a);
-    const s1 = box(0.27, 0.27, 0.8, B('#ef5350')); s1.position.z = 2; arm.add(s1); const s2 = s1.clone(); s2.position.z = 4.5; arm.add(s2);
-    arm.position.y = 0.9; g.add(arm); g.rotation.y = rotY; scene.add(g); barriers[key] = { arm, open: 0 };
+    const arm = new THREE.Group(); const a = box(0.25, 0.25, def.len, M('#f2f2f2')); a.position.z = def.len / 2; arm.add(a);
+    const s1 = box(0.27, 0.27, 0.8, B('#ef5350')); s1.position.z = def.len * 0.3; arm.add(s1); const s2 = s1.clone(); s2.position.z = def.len * 0.7; arm.add(s2);
+    arm.position.y = 0.9; g.add(arm); g.rotation.y = def.rot; scene.add(g); barriers[def.key] = { arm, open: 0, g, def };
   }
-  barrier('igvIn', L.igvIn - 2.9, L.igvInStopZ - 1.5, Math.PI / 2);
-  barrier('igvOut', L.igvOut + 2.9, L.igvOutStopZ + 1.5, -Math.PI / 2);
-  barrier('ne', L.neInX + 2.9, L.neStopZ + 1.5, -Math.PI / 2);
-  barrier('nw', L.vnS + 3, L.nwStopZ + 1.5, -Math.PI / 2);
-  barrier('scale', L.exitImpX + 2.9, L.scaleStopZ - 1.5, -Math.PI / 2);
-  barrier('b0', L.island[0], L.boothS + 1.2, -Math.PI / 2);
-  barrier('b1', L.island[1], L.boothS + 1.2, Math.PI / 2);
-  barrier('b2', L.seps[1], L.boothN - 1.2, Math.PI / 2);
-  barrier('b3', L.seps[2], L.boothN - 1.2, Math.PI / 2);
+  Y.BARRIERS.forEach(barrier);
   for (const [x0, x1] of [[L.igvIn - 1.6, L.igvIn + 1.6], [L.igvOut - 1.6, L.igvOut + 1.6]]) { add(box(0.4, 6.5, 0.4, mat.steel), x0 - 0.8, 3.25, 218); add(box(0.4, 6.5, 0.4, mat.steel), x1 + 0.8, 3.25, 218); }
   add(box(L.igvOut - L.igvIn + 6, 0.6, 0.8, mat.steel), (L.igvIn + L.igvOut) / 2, 6.5, 218);
   for (const x of L.insFront) { add(box(18, 0.5, 8, mat.canopy), x + 7.75, 6.5, L.insZ); for (const dx of [-0.5, 16]) for (const dz of [-3.8, 3.8]) add(box(0.4, 6.5, 0.4, mat.steel), x + dx, 3.25, L.insZ + dz); }
@@ -1910,6 +2011,50 @@ window.PLAN_IMG = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAkGBw
   layer('mag').visible = false;
   layer('masts'); layer('heat');
 
+  // ---- hạng mục VVS: trạm kiểm soát (camera + RFID chung một cột, biển LED, barie)
+  const cpObjs = {};
+  const CP_H = 7;
+  function ledDraw(o, f) {
+    const key = f.l1 + '|' + f.l2 + '|' + f.l3; if (o.ledKey === key) return; o.ledKey = key;
+    const c = o.ledCv.getContext('2d'); c.fillStyle = '#05080c'; c.fillRect(0, 0, 384, 128);
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillStyle = f.l3 ? '#ffd23f' : '#6fd3ff'; c.font = '700 ' + (f.l3 ? 46 : 36) + 'px "JetBrains Mono", ui-monospace, monospace'; c.fillText(f.l1, 192, 34);
+    c.fillStyle = '#9be3a5'; c.font = '500 25px "JetBrains Mono", ui-monospace, monospace'; c.fillText(f.l2, 192, 78);
+    if (f.l3) { c.fillStyle = f.l3.startsWith('MỜI') ? '#4cc38a' : '#ff8a65'; c.font = '700 24px "Be Vietnam Pro", system-ui, sans-serif'; c.fillText(f.l3, 192, 111); }
+    o.ledTex.needsUpdate = true;
+  }
+  for (const c of HW.CHECKPOINTS) {
+    const g = new THREE.Group(); g.position.set(c.x, 0, c.z);
+    g.add(pole(0, 0, CP_H, 0.22, '#7b8b99'));
+    const head = new THREE.Group(); head.rotation.y = Math.atan2(c.face[0], c.face[1]); g.add(head);   // +z cục bộ = hướng xe đang tới
+    const camB = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.5, 0.7), hwMat('#7fd1ff')); camB.position.set(0, 6.75, 0.35); head.add(camB);
+    const lens = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.2, 10).rotateX(Math.PI / 2), hwBasic('#0a121b')); lens.position.set(0, 6.75, 0.8); head.add(lens);
+    const rf = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.7, 0.14), hwMat('#f5a524')); rf.position.set(0, 5.95, 0.2); head.add(rf);
+    const rfa = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.55, 0.04), hwBasic('#ffe2a8')); rfa.position.set(0, 5.95, 0.29); head.add(rfa);
+    const ledBack = box(3.1, 1.1, 0.25, mat.dark); ledBack.position.set(0, 4.95, 0.28); head.add(ledBack);
+    const ledCv = document.createElement('canvas'); ledCv.width = 384; ledCv.height = 128;
+    const ledTex = new THREE.CanvasTexture(ledCv); ledTex.colorSpace = THREE.SRGBColorSpace;
+    const led = new THREE.Mesh(new THREE.PlaneGeometry(3.0, 1.0), new THREE.MeshBasicMaterial({ map: ledTex })); led.position.set(0, 4.95, 0.42); head.add(led);
+    const o = { g, ledCv, ledTex, ledKey: '', plate: '', plateT: -1e9, reads: 0, state: 'idle', cp: c };
+    cpObjs[c.id] = o; ledDraw(o, HW.ledFormat('', 0, 'idle'));
+    reg(g, { kind: 'cp', cp: c, title: c.name, id: c.id }, 'cp');
+    const bo = barriers[c.barrier]; if (bo) { bo.g.userData.info = { kind: 'barrier', cp: c, def: bo.def, title: 'Barie · ' + c.name, id: c.barrier }; pickables.push(bo.g); }
+  }
+  // cập nhật biển LED: hiển thị biển số + ngày giờ khi xe tới điểm dừng, giữ 6 giây sau khi xe đi
+  function updateLeds() {
+    const vs = sim.snapshotCache || [];
+    for (const c of HW.CHECKPOINTS) {
+      const o = cpObjs[c.id]; const [tx, tz, r] = c.trig;
+      let best = null, bd = r;
+      for (const v of vs) { const d = Math.hypot(v.fx - tx, v.fz - tz); if (d <= bd) { bd = d; best = v; } }
+      const open = sim.barrierOpen(barriers[c.barrier].def);
+      if (best) { if (o.plate !== best.plate) { o.plate = best.plate; o.reads++; } o.plateT = sim.t; o.state = open ? 'open' : 'read'; }
+      else if (sim.t - o.plateT > 6) o.state = 'idle';
+      else o.state = 'open';
+      ledDraw(o, HW.ledFormat(o.state === 'idle' ? '' : o.plate, sim.t, o.state));
+    }
+  }
+
   // ---- bản đồ nhiệt độ trễ 5G (vẽ lại khi có trạm hỏng / khôi phục)
   const HEAT = { x0: -10, z0: -30, w: 350, h: 365 };
   const heatCv = document.createElement('canvas'); heatCv.width = HEAT.w; heatCv.height = HEAT.h;
@@ -1942,7 +2087,13 @@ window.PLAN_IMG = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAkGBw
   });
   const esc = (t) => String(t).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
   const dl = (rows) => '<dl>' + rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${v}</dd>`).join('') + '</dl>';
+  function liveCp(info) {
+    const o = cpObjs[info.cp.id]; const open = sim.barrierOpen(barriers[info.cp.barrier].def);
+    const st = o.state === 'idle' ? 'Chờ xe' : open ? 'Đã đọc · barie mở' : 'Đang đọc · barie đóng';
+    return dl([['Biển LED', o.state === 'idle' ? 'SẴN SÀNG' : esc(o.plate)], ['Trạng thái', st], ['Barie', open ? '<b style="color:var(--ok)">Mở</b>' : '<b style="color:var(--err)">Đóng</b>'], ['Lượt đọc từ lúc chạy', o.reads]]);
+  }
   function liveDev(info) {
+    if (info.kind === 'cp' || info.kind === 'barrier') return liveCp(info);
     if (info.kind === '5g') {
       const c = info.cell; const dead = !!sim.deadCells[c.id];
       const ue = sim.vehicles.filter(v => !v.dead && v.av && v.cell === c.id).length;
@@ -1961,6 +2112,13 @@ window.PLAN_IMG = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAkGBw
         ['Phủ danh định', `≤ 20 ms: ${c.r[0]} m · ≤ 50 ms: ${c.r[1]} m · biên: ${c.r[2]} m`], ['Băng tần / chế độ', '5G SA, n78 (3,5 GHz); lõi và máy chủ biên đặt tại VN']];
       return rows;
     }
+    if (info.kind === 'cp') {
+      const c = info.cp, S = HW.CP_SPEC; const row = (t) => t.rows.map(r => r[0] + ': ' + r[1]).join(' · ');
+      return [['Mã', c.id], ['Vị trí cột', `x ${fmt(c.x, 1)} m · z ${fmt(c.z, 1)} m`], ['Cùng một cột', 'camera kiểm soát (cao 6,8 m) + đầu đọc RFID (cao 6,0 m) + biển LED (cao 4,5–5,5 m)'], ['Camera', esc(S.camera.rows[0][1])], ['RFID', esc(S.rfid.rows[0][1] + '; tầm đọc ' + S.rfid.rows[2][1])], ['Biển LED', 'Biển số, ngày giờ, trạng thái; P10 ngoài trời 3,0 × 1,0 m'], ['Barie', c.barrier.startsWith('lane') ? 'Barie mới ở đầu làn, tay đòn 4,6 m' : 'Barie hiện có của cổng, tay đòn 6,5 m'], ['Kết nối', 'Cáp quang → tủ cổng (switch PoE+) → SIVIP; xem tài liệu kỹ thuật VVS']];
+    }
+    if (info.kind === 'barrier') {
+      const S = HW.CP_SPEC.barrier; return [['Barie', info.id], ['Gắn với', info.cp.id + ' (camera + RFID + LED cùng cột)'], ['Quy tắc', esc(S.rows[1][1])], ['Điều khiển', esc(S.rows[2][1])]];
+    }
     const d = info.dev; const rows = [['Mã', d.id], ['Loại', HW.KIND_INFO[d.kind].name], ['Vị trí', `x ${fmt(d.x, 1)} m · z ${fmt(d.z, 1)} m`], ['Độ cao lắp', d.h + ' m'], ['Thông số', esc(d.fov)]];
     return rows;
   }
@@ -1973,10 +2131,10 @@ window.PLAN_IMG = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAkGBw
     if (!selected) return;
     const s = selected;
     if (s.type === 'dev') {
-      const info = s.info; const kc = info.kind === '5g' ? HW.KIND_INFO['5g'].color : HW.KIND_INFO[info.kind].color;
+      const info = s.info; const kk = info.kind === 'barrier' ? 'cp' : info.kind; const kc = HW.KIND_INFO[kk].color;
       if (full) {
-        const role = info.kind === '5g' ? info.cell.note : info.dev.role;
-        infoEl.innerHTML = `<button class="x" type="button" aria-label="Đóng">✕</button><h3>${esc(info.title)}</h3><div class="kind"><i style="background:${kc}"></i>${HW.KIND_INFO[info.kind].name}</div>`
+        const role = info.kind === '5g' ? info.cell.note : info.kind === 'cp' || info.kind === 'barrier' ? info.cp.role : info.dev.role;
+        infoEl.innerHTML = `<button class="x" type="button" aria-label="Đóng">✕</button><h3>${esc(info.title)}</h3><div class="kind"><i style="background:${kc}"></i>${info.kind === 'barrier' ? 'Barie' : HW.KIND_INFO[info.kind].name}</div>`
           + dl(devHtml(info)) + `<p>${esc(role)}</p><div class="live" id="infoLive"></div>`
           + (info.kind === '5g' ? '<div class="act"><button type="button" id="btnCell"></button></div>' : '')
           + '<p class="lab" style="font-size:11px">Số liệu là giả định minh hoạ, chưa phải datasheet thiết bị.</p>';
@@ -2060,7 +2218,7 @@ window.PLAN_IMG = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAkGBw
   function reset() {
     for (const [, o] of vObjs) { scene.remove(o.g); scene.remove(o.tr); }
     vObjs.clear(); slotVer = -1;
-    sim = new Y.Sim(sel.value, 1 + Math.floor(Math.random() * 1000)); heatVer = -1; cellVer = -1; showInfo(null);
+    sim = new Y.Sim(sel.value, 1 + Math.floor(Math.random() * 1000)); heatVer = -1; cellVer = -1; showInfo(null); for (const k in cpObjs) { cpObjs[k].reads = 0; cpObjs[k].plate = ''; cpObjs[k].plateT = -1e9; }
     $('scDesc').textContent = sim.sc.desc; lastLog = 0; $('log').innerHTML = '';
   }
   sel.addEventListener('change', reset);
@@ -2075,14 +2233,14 @@ window.PLAN_IMG = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAkGBw
   $('optTags').addEventListener('change', e => { showTags = e.target.checked; });
   $('optPlan').addEventListener('change', e => { if (planMesh) { planMesh.visible = e.target.checked; siteGroup.visible = !e.target.checked; } });
   $('optRoof').addEventListener('change', e => { roof.visible = e.target.checked; });
-  const LAYER_OPTS = { optMasts: 'masts', optCam: 'cam', optLidar: 'lidar', optRfid: 'rfid', optRtk: 'rtk', optUwb: 'uwb', optTl: 'tl', optMag: 'mag', optHeat: 'heat' };
+  const LAYER_OPTS = { optMasts: 'masts', optCam: 'cam', optLidar: 'lidar', optCp: 'cp', optRtk: 'rtk', optUwb: 'uwb', optTl: 'tl', optMag: 'mag', optHeat: 'heat' };
   const syncHeatLegend = () => $('heatLegend').classList.toggle('on', $('optHeat').checked);
   for (const [id, k] of Object.entries(LAYER_OPTS)) $(id).addEventListener('change', (e) => { layer(k).visible = e.target.checked; if (id === 'optHeat') syncHeatLegend(); });
   $('optRings').addEventListener('change', (e) => { for (const o of Object.values(cellObjs)) o.rings.visible = e.target.checked; });
   function setLayer(id, on) { const el = $(id); el.checked = on; el.dispatchEvent(new Event('change')); }
   document.querySelectorAll('[data-view]').forEach(b => b.addEventListener('click', () => {
     if (b.dataset.view === 'net') { setLayer('optHeat', true); setLayer('optRings', true); setLayer('optMasts', true); }
-    else if (b.dataset.view === 'sensors') { for (const id of ['optCam', 'optLidar', 'optRfid', 'optRtk', 'optUwb', 'optTl', 'optMag']) setLayer(id, true); setLayer('optHeat', false); setLayer('optRings', false); }
+    else if (b.dataset.view === 'sensors') { for (const id of ['optCam', 'optLidar', 'optCp', 'optRtk', 'optUwb', 'optTl', 'optMag']) setLayer(id, true); setLayer('optHeat', false); setLayer('optRings', false); }
   }));
   $('btnPanel').addEventListener('click', () => document.body.classList.toggle('panel-closed'));
 
@@ -2130,15 +2288,16 @@ window.PLAN_IMG = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAkGBw
   function animateBarriers() {
     const t = sim.t, G = sim.gates;
     const setB = (b, open) => { b.open += ((open ? 1 : 0) - b.open) * 0.15; b.arm.rotation.x = -b.open * 1.35; };
-    setB(barriers.igvIn, G.igvIn > t); setB(barriers.igvOut, G.igvOut > t); setB(barriers.ne, G.ne > t); setB(barriers.nw, G.nw > t); setB(barriers.scale, G.scale > t);
-    for (let k = 0; k < 4; k++) setB(barriers['b' + k], G.booth[k] > t);
+    for (const def of Y.BARRIERS) setB(barriers[def.key], sim.barrierOpen(def));
   }
 
+  let ledT = 0;
   function updateHardware() {
     if (sim.netVer !== cellVer) { refreshCells(); cellVer = sim.netVer; }
     if ($('optHeat').checked) drawHeat();
     for (const z in tlLights) { const locked = !!(sim.zones[z] && sim.zones[z].lockedBy); for (const l of tlLights[z]) l.material.color.set(locked ? '#ef5350' : '#4cc38a'); }
     for (const r of lidarSpin) r.rotation.z += 0.08;
+    ledT += 1; if (ledT % 6 === 0) updateLeds();
     updateSelection();
   }
   // ------------------------------------------------------------ vòng lặp

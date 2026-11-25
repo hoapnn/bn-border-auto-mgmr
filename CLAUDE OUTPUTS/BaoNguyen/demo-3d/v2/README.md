@@ -107,13 +107,12 @@ Bật lớp **Vùng phủ 5G** (hoặc bấm nút "Phủ sóng 5G"): xanh ≤ 20
 Kết quả mô hình khi đủ trạm, trong ranh giới dự án (~4,9 ha): 65% diện tích ≤ 20 ms, 21% ở 20–50 ms, 10% ở 50–100 ms, ~4,6% yếu hơn hoặc mất sóng — vùng yếu tập trung ở bãi xe hiện trạng
 phía đông đường trục (sau khối cổng phải, không có IGV). Mọi tuyến IGV đều ≤ 43 ms. Khi mất 5G-07, 98% diện tích dưới mái nhà chuyển tải rơi lên trên 50 ms.
 
-### 3) Cảm biến và thiết bị dẫn hướng trên bãi (41 thiết bị cố định)
+### 3) Cảm biến và thiết bị dẫn hướng trên bãi (32 thiết bị cố định + 17 trạm kiểm soát VVS)
 
 | Loại | SL | Đặt ở đâu | Dùng để |
 |---|---|---|---|
-| Camera | 12 | cổng trung tâm, cổng IGV, 2 góc nhà chuyển tải, cầu trục, 2 cổng VN, trạm cân, khu kiểm hoá, vòng IGV, ranh giới nam, bãi chờ | giám sát, đọc biển số / mã container, hình ảnh cho giám sát từ xa |
+| Camera | 8 | cổng trung tâm, cổng IGV, 2 góc nhà chuyển tải, cầu trục, 2 cổng VN, trạm cân, khu kiểm hoá, vòng IGV, ranh giới nam, bãi chờ | giám sát, đọc biển số / mã container, hình ảnh cho giám sát từ xa |
 | LiDAR cố định | 7 | một cột cạnh mỗi vùng giao cắt | "mắt thứ hai" để SIVIP khoá vùng chính xác và thấy người / vật lạ |
-| Cổng RFID / OCR | 5 | cổng IGV vào, cổng IGV ra, cổng nhập khẩu, cổng xuất khẩu, trạm cân ra | đọc biển số / mã container / seal rồi mới mở barie |
 | Trạm gốc RTK | 2 | mái khối cổng trái, mái nhà chuyển tải | số hiệu chỉnh GNSS cho IGV ngoài trời (hai trạm so chéo) |
 | Neo UWB | 8 | cột nhà chuyển tải | định vị dưới mái khi GNSS bị che |
 | Đèn tín hiệu | 7 | một đèn mỗi vùng giao cắt | **đổi màu theo trạng thái vùng**: đỏ khi một xe đang giữ vùng, xanh khi trống |
@@ -122,6 +121,16 @@ phía đông đường trục (sau khối cổng phải, không có IGV). Mọi 
 
 Mỗi lớp bật / tắt trong "Lớp phần cứng"; nam châm sàn mặc định tắt cho đỡ rối. Mọi vị trí là giả định theo mặt bằng PDF (đặt ngoài tim làn, cạnh vùng giao cắt hoặc cổng);
 bản vẽ không thể hiện các thiết bị này. Bộ kiểm thử kiểm tra khoảng hở giữa thân xe và **mọi trụ / thiết bị cố định** mỗi 0,5 s: nhỏ nhất ≥ 0,79 m ở cả 9 kịch bản.
+
+### 4) Trạm kiểm soát VVS: LED, camera, RFID, barie (17 trạm)
+
+Mỗi trạm là một cột 7 m mang **camera + đầu đọc RFID cùng vị trí**, biển LED (biển số, ngày giờ, trạng thái) và barie. Vị trí: 2 cổng TQ (IGV vào / ra),
+cổng nhập khẩu, cổng xuất khẩu, trạm cân, 4 làn đường xuyên biên giới và 8 làn nhà chuyển tải. Bật lớp "Trạm kiểm soát VVS" hoặc các nút nhìn "Trạm kiểm soát"; bấm vào cột để xem thông số và trạng thái trực tiếp.
+Barie chỉ mở khi SIVIP đã đặt được ô / làn cho xe và giữ mở đến khi xe đã qua; bộ kiểm thử đếm `barrierViol` (xe đi qua khi barie đóng) và phải bằng 0.
+Chi tiết kỹ thuật, bảng vị trí, kết nối: [docs/VVS_HangMuc_KiemSoatCong.md](docs/VVS_HangMuc_KiemSoatCong.md).
+
+Giả định thêm (không có giá / hợp đồng, vì repo công khai): vị trí cột theo mặt bằng PDF; thông số thiết bị là giá trị điển hình minh hoạ; ngày giờ LED là giờ mô phỏng
+(bắt đầu 25/03/2027 06:00:00); 4 làn barie ở đường xuyên biên giới là giả định theo bản vẽ concept; xe dừng ở barie đóng chỉ khi chưa được SIVIP cấp chỗ.
 
 ## Chỗ PDF thiếu thông tin và giả định đã dùng
 
@@ -171,53 +180,55 @@ xe TQ chỉ vào làn IGV và nhà chuyển tải, xe có tài xế VN làm ph�
 
 60 phút mô phỏng, seed 1 và 2 (`npm test`, chạy kèm kiểm tra phần cứng):
 
-| Kịch bản | Seed | Va chạm | Hở xe–xe (m) | Hở xe–cont (m) | Hở xe–thiết bị (m) | Cont nhập | Cont xuất | Xe TQ ra | Xe VN ra | Lượt cầu trục | Kiểm hoá | Chờ lâu nhất (s) | Chờ cổng IGV cuối | Kết quả |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| normal | 1 | 0 | 2.73 | 0.88 | 0.85 | 22 | 7 | 29 | 30 | 63 | 6 | 306 | 1 | ĐẠT |
-| normal | 2 | 0 | 3.20 | 0.88 | 0.85 | 23 | 14 | 32 | 32 | 71 | 6 | 179 | 2 | ĐẠT |
-| peak | 1 | 0 | 2.73 | 0.88 | 0.85 | 25 | 18 | 35 | 41 | 93 | 6 | 286 | 30 | ĐẠT |
-| peak | 2 | 0 | 2.73 | 0.88 | 0.85 | 31 | 15 | 39 | 44 | 97 | 3 | 271 | 16 | ĐẠT |
-| laneFail | 1 | 0 | 2.73 | 0.88 | 0.85 | 18 | 11 | 24 | 25 | 63 | 5 | 437 | 17 | ĐẠT |
-| laneFail | 2 | 0 | 2.73 | 0.88 | 0.85 | 26 | 12 | 36 | 33 | 76 | 4 | 280 | 4 | ĐẠT |
-| breakdown | 1 | 0 | 2.73 | 0.88 | 0.85 | 21 | 10 | 28 | 29 | 65 | 10 | 333 | 5 | ĐẠT |
-| breakdown | 2 | 0 | 3.20 | 0.88 | 0.85 | 24 | 9 | 31 | 32 | 69 | 8 | 386 | 4 | ĐẠT |
-| inspection | 1 | 0 | 2.73 | 0.88 | 0.85 | 22 | 6 | 24 | 27 | 61 | 12 | 329 | 9 | ĐẠT |
-| inspection | 2 | 0 | 2.73 | 0.88 | 0.85 | 22 | 7 | 26 | 27 | 58 | 11 | 305 | 7 | ĐẠT |
-| av | 1 | 0 | 2.62 | 0.88 | 0.85 | 23 | 8 | 29 | 30 | 64 | 8 | 411 | 2 | ĐẠT |
-| av | 2 | 0 | 2.62 | 0.88 | 0.85 | 22 | 10 | 30 | 30 | 69 | 8 | 381 | 2 | ĐẠT |
-| av5g | 1 | 0 | 2.62 | 0.88 | 0.85 | 27 | 8 | 34 | 29 | 73 | 7 | 225 | 0 | ĐẠT |
-| av5g | 2 | 0 | 2.62 | 0.88 | 0.85 | 23 | 10 | 30 | 31 | 65 | 7 | 224 | 5 | ĐẠT |
-| weather | 1 | 0 | 2.01 | 0.88 | 0.79 | 16 | 6 | 23 | 24 | 51 | 6 | 257 | 9 | ĐẠT |
-| weather | 2 | 0 | 2.01 | 0.88 | 0.79 | 21 | 11 | 28 | 29 | 67 | 9 | 323 | 4 | ĐẠT |
-| stress | 1 | 0 | 2.73 | 0.88 | 0.85 | 25 | 19 | 34 | 44 | 97 | 6 | 294 | 94 | ĐẠT |
-| stress | 2 | 0 | 2.73 | 0.88 | 0.85 | 26 | 19 | 36 | 45 | 100 | 3 | 353 | 86 | ĐẠT |
+| kịch bản | seed | phút | va chạm | xe lọt barie | hở xe–xe (m) | hở xe–cont (m) | hở xe–thiết bị (m) | cont nhập | cont xuất | xe TQ ra | xe VN ra | lượt cầu trục | kiểm hoá | chờ lâu nhất (s) | chờ IGV | kết quả |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| normal | 1 | 60 | 0 | 0 | 2.73 | 0.88 | 0.70 | 22 | 7 | 29 | 30 | 63 | 6 | 306 | 1 | ĐẠT |
+| normal | 2 | 60 | 0 | 0 | 3.20 | 0.88 | 0.70 | 23 | 14 | 32 | 32 | 71 | 6 | 179 | 2 | ĐẠT |
+| peak | 1 | 60 | 0 | 0 | 2.73 | 0.88 | 0.70 | 25 | 18 | 35 | 41 | 93 | 6 | 286 | 30 | ĐẠT |
+| peak | 2 | 60 | 0 | 0 | 2.73 | 0.88 | 0.70 | 31 | 15 | 39 | 44 | 97 | 3 | 271 | 16 | ĐẠT |
+| laneFail | 1 | 60 | 0 | 0 | 2.73 | 0.88 | 0.70 | 18 | 11 | 24 | 25 | 63 | 5 | 437 | 17 | ĐẠT |
+| laneFail | 2 | 60 | 0 | 0 | 2.73 | 0.88 | 0.70 | 26 | 12 | 36 | 33 | 76 | 4 | 280 | 4 | ĐẠT |
+| breakdown | 1 | 60 | 0 | 0 | 2.73 | 0.88 | 0.70 | 21 | 10 | 28 | 29 | 65 | 10 | 333 | 5 | ĐẠT |
+| breakdown | 2 | 60 | 0 | 0 | 3.20 | 0.88 | 0.70 | 24 | 9 | 31 | 32 | 69 | 8 | 386 | 4 | ĐẠT |
+| inspection | 1 | 60 | 0 | 0 | 2.73 | 0.88 | 0.70 | 22 | 6 | 24 | 27 | 61 | 12 | 329 | 9 | ĐẠT |
+| inspection | 2 | 60 | 0 | 0 | 2.73 | 0.88 | 0.70 | 22 | 7 | 26 | 27 | 58 | 11 | 305 | 7 | ĐẠT |
+| av | 1 | 60 | 0 | 0 | 2.62 | 0.88 | 0.70 | 23 | 8 | 29 | 30 | 64 | 8 | 411 | 2 | ĐẠT |
+| av | 2 | 60 | 0 | 0 | 2.62 | 0.88 | 0.70 | 22 | 10 | 30 | 30 | 69 | 8 | 381 | 2 | ĐẠT |
+| av5g | 1 | 60 | 0 | 0 | 2.62 | 0.88 | 0.70 | 27 | 8 | 34 | 29 | 73 | 7 | 225 | 0 | ĐẠT |
+| av5g | 2 | 60 | 0 | 0 | 2.62 | 0.88 | 0.70 | 23 | 10 | 30 | 31 | 65 | 7 | 224 | 5 | ĐẠT |
+| weather | 1 | 60 | 0 | 0 | 2.01 | 0.88 | 0.70 | 16 | 6 | 23 | 24 | 51 | 6 | 257 | 9 | ĐẠT |
+| weather | 2 | 60 | 0 | 0 | 2.01 | 0.88 | 0.70 | 21 | 11 | 28 | 29 | 67 | 9 | 323 | 4 | ĐẠT |
+| stress | 1 | 60 | 0 | 0 | 2.73 | 0.88 | 0.70 | 25 | 19 | 34 | 44 | 97 | 6 | 294 | 94 | ĐẠT |
+| stress | 2 | 60 | 0 | 0 | 2.73 | 0.88 | 0.70 | 26 | 19 | 36 | 45 | 100 | 3 | 353 | 86 | ĐẠT |
 
 18/18 lượt đạt.
 
 Lượt dài 180 phút mô phỏng, seed 3 và 4 (`npm run test:long`):
 
-| Kịch bản | Seed | Va chạm | Hở xe–xe (m) | Hở xe–cont (m) | Hở xe–thiết bị (m) | Cont nhập | Cont xuất | Xe TQ ra | Xe VN ra | Lượt cầu trục | Kiểm hoá | Chờ lâu nhất (s) | Chờ cổng IGV cuối | Kết quả |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| normal | 3 | 0 | 3.20 | 0.88 | 0.85 | 71 | 30 | 92 | 93 | 201 | 12 | 220 | 0 | ĐẠT |
-| normal | 4 | 0 | 3.20 | 0.88 | 0.85 | 66 | 21 | 81 | 80 | 173 | 14 | 324 | 1 | ĐẠT |
-| peak | 3 | 0 | 2.73 | 0.88 | 0.85 | 86 | 50 | 116 | 123 | 280 | 19 | 467 | 69 | ĐẠT |
-| peak | 4 | 0 | 2.73 | 0.88 | 0.85 | 88 | 47 | 116 | 123 | 276 | 23 | 347 | 54 | ĐẠT |
-| laneFail | 3 | 0 | 2.73 | 0.88 | 0.85 | 83 | 45 | 119 | 113 | 255 | 18 | 271 | 0 | ĐẠT |
-| laneFail | 4 | 0 | 2.73 | 0.88 | 0.85 | 79 | 30 | 106 | 99 | 222 | 17 | 275 | 2 | ĐẠT |
-| breakdown | 3 | 0 | 2.73 | 0.88 | 0.85 | 80 | 30 | 103 | 101 | 221 | 10 | 300 | 0 | ĐẠT |
-| breakdown | 4 | 0 | 3.20 | 0.88 | 0.85 | 75 | 25 | 96 | 89 | 197 | 15 | 300 | 1 | ĐẠT |
-| inspection | 3 | 0 | 2.73 | 0.88 | 0.85 | 69 | 24 | 87 | 88 | 186 | 43 | 340 | 10 | ĐẠT |
-| inspection | 4 | 0 | 2.73 | 0.88 | 0.85 | 64 | 15 | 76 | 77 | 161 | 43 | 407 | 9 | ĐẠT |
-| av | 3 | 0 | 2.62 | 0.88 | 0.85 | 74 | 32 | 96 | 95 | 212 | 13 | 331 | 0 | ĐẠT |
-| av | 4 | 0 | 2.83 | 0.88 | 0.85 | 70 | 22 | 89 | 86 | 186 | 8 | 233 | 1 | ĐẠT |
-| av5g | 3 | 0 | 2.62 | 0.88 | 0.85 | 72 | 31 | 98 | 97 | 207 | 11 | 283 | 4 | ĐẠT |
-| av5g | 4 | 0 | 2.62 | 0.88 | 0.85 | 67 | 21 | 86 | 83 | 178 | 16 | 331 | 4 | ĐẠT |
-| weather | 3 | 0 | 2.01 | 0.88 | 0.79 | 68 | 30 | 90 | 88 | 197 | 19 | 388 | 1 | ĐẠT |
-| weather | 4 | 0 | 2.01 | 0.88 | 0.79 | 65 | 21 | 83 | 78 | 171 | 18 | 273 | 1 | ĐẠT |
-| stress | 3 | 0 | 2.73 | 0.88 | 0.85 | 51 | 100 | 122 | 146 | 312 | 19 | 421 | 312 | ĐẠT |
-| stress | 4 | 0 | 2.73 | 0.88 | 0.85 | 56 | 72 | 107 | 124 | 264 | 18 | 493 | 248 | ĐẠT |
+| kịch bản | seed | phút | va chạm | xe lọt barie | hở xe–xe (m) | hở xe–cont (m) | hở xe–thiết bị (m) | cont nhập | cont xuất | xe TQ ra | xe VN ra | lượt cầu trục | kiểm hoá | chờ lâu nhất (s) | chờ IGV | kết quả |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| normal | 3 | 180 | 0 | 0 | 3.20 | 0.88 | 0.70 | 71 | 30 | 92 | 93 | 201 | 12 | 220 | 0 | ĐẠT |
+| normal | 4 | 180 | 0 | 0 | 3.20 | 0.88 | 0.70 | 66 | 21 | 81 | 80 | 173 | 14 | 324 | 1 | ĐẠT |
+| peak | 3 | 180 | 0 | 0 | 2.73 | 0.88 | 0.70 | 86 | 50 | 116 | 123 | 280 | 19 | 467 | 69 | ĐẠT |
+| peak | 4 | 180 | 0 | 0 | 2.73 | 0.88 | 0.70 | 88 | 47 | 116 | 123 | 276 | 23 | 347 | 54 | ĐẠT |
+| laneFail | 3 | 180 | 0 | 0 | 2.73 | 0.88 | 0.70 | 83 | 45 | 119 | 113 | 255 | 18 | 271 | 0 | ĐẠT |
+| laneFail | 4 | 180 | 0 | 0 | 2.73 | 0.88 | 0.70 | 79 | 30 | 106 | 99 | 222 | 17 | 275 | 2 | ĐẠT |
+| breakdown | 3 | 180 | 0 | 0 | 2.73 | 0.88 | 0.70 | 80 | 30 | 103 | 101 | 221 | 10 | 300 | 0 | ĐẠT |
+| breakdown | 4 | 180 | 0 | 0 | 3.20 | 0.88 | 0.70 | 75 | 25 | 96 | 89 | 197 | 15 | 300 | 1 | ĐẠT |
+| inspection | 3 | 180 | 0 | 0 | 2.73 | 0.88 | 0.70 | 69 | 24 | 87 | 88 | 186 | 43 | 340 | 10 | ĐẠT |
+| inspection | 4 | 180 | 0 | 0 | 2.73 | 0.88 | 0.70 | 64 | 15 | 76 | 77 | 161 | 43 | 407 | 9 | ĐẠT |
+| av | 3 | 180 | 0 | 0 | 2.62 | 0.88 | 0.70 | 74 | 32 | 96 | 95 | 212 | 13 | 331 | 0 | ĐẠT |
+| av | 4 | 180 | 0 | 0 | 2.83 | 0.88 | 0.70 | 70 | 22 | 89 | 86 | 186 | 8 | 233 | 1 | ĐẠT |
+| av5g | 3 | 180 | 0 | 0 | 2.62 | 0.88 | 0.70 | 72 | 31 | 98 | 97 | 207 | 11 | 283 | 4 | ĐẠT |
+| av5g | 4 | 180 | 0 | 0 | 2.62 | 0.88 | 0.70 | 67 | 21 | 86 | 83 | 178 | 16 | 331 | 4 | ĐẠT |
+| weather | 3 | 180 | 0 | 0 | 2.01 | 0.88 | 0.70 | 68 | 30 | 90 | 88 | 197 | 19 | 388 | 1 | ĐẠT |
+| weather | 4 | 180 | 0 | 0 | 2.01 | 0.88 | 0.70 | 65 | 21 | 83 | 78 | 171 | 18 | 273 | 1 | ĐẠT |
+| stress | 3 | 180 | 0 | 0 | 2.73 | 0.88 | 0.70 | 51 | 100 | 122 | 146 | 312 | 19 | 421 | 312 | ĐẠT |
+| stress | 4 | 180 | 0 | 0 | 2.73 | 0.88 | 0.70 | 56 | 72 | 107 | 124 | 264 | 18 | 493 | 248 | ĐẠT |
 
 18/18 lượt đạt. Tổng cộng 36/36 lượt, 0 va chạm.
+
+Cột "xe lọt barie" đếm xe đi qua vạch khi tay đòn đang đóng: 0 ở cả 36 lượt. Khoảng hở nhỏ nhất xe–thiết bị cố định (kể cả cột trạm kiểm soát) ≥ 0,70 m.
 
 Lỗi kẹt chỉ lộ ở lượt dài (đã sửa từ trước khi thêm phần cứng):
 
@@ -237,10 +248,11 @@ Khoảng hở xe–container luôn là 0,88 m: đó là khoảng cách thiết k
 |---|---|
 | `BaoNguyen_Demo3D_v2.html` | Bản đóng gói một file, mở trực tiếp |
 | `sim-core.js` | Lõi mô phỏng: mặt bằng theo PDF, tuyến đường, đặt chỗ ô, vùng giao cắt, ô chờ, cầu trục, kịch bản, kiểm tra va chạm, ảnh hưởng độ trễ 5G lên tốc độ IGV |
-| `hardware.js` | Dữ liệu phần cứng: cấu hình IGV, 8 trạm 5G + mô hình độ trễ, 41 cảm biến / thiết bị dẫn hướng cố định |
+| `hardware.js` | Dữ liệu phần cứng: cấu hình IGV, 8 trạm 5G + mô hình độ trễ, 32 cảm biến / thiết bị dẫn hướng cố định và 17 trạm kiểm soát VVS (LED, camera + RFID, barie) |
 | `app.js` | Vẽ 3D bằng Three.js 0.160 và giao diện |
 | `page.html` | Khung trang và CSS |
 | `plan-image.js` | Ảnh mặt bằng trang 3 của PDF (thu nhỏ) làm lớp nền đối chiếu |
 | `build.js` | Ghép các file trên thành file HTML |
 | `test/run-scenarios.js` | Kiểm thử tự động mọi kịch bản (va chạm xe–xe, xe–container, xe–trụ thiết bị) |
+| `docs/VVS_HangMuc_KiemSoatCong.md` | Tài liệu kỹ thuật hạng mục VVS (vị trí, thông số, kết nối, quy trình) |
 | `test/hardware-checks.js` | Kiểm tra dữ liệu phần cứng và mô hình độ trễ 5G (chạy trước kịch bản) |

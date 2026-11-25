@@ -48,6 +48,8 @@
     vn: { p: [105, 120, -95], t: [120, 0, 55] },
     top: { p: [140, 520, 129], t: [140, 0, 128] },
     net: { p: [150, 560, 130], t: [150, 0, 128] },
+    cp: { p: [66, 12, 125], t: [90, 4, 122] },
+    cpTq: { p: [180, 12, 232], t: [198, 4, 216] },
     sensors: { p: [150, 190, 330], t: [140, 0, 125] },
   };
   function setView(k) { const v = VIEWS[k]; camera.position.set(...v.p); controls.target.set(...v.t); controls.update(); }
@@ -216,22 +218,14 @@
   add(box(L.scaleNE[1] - L.scaleNE[0], 0.25, L.scaleNE[3] - L.scaleNE[2], mat.scale), (L.scaleNE[0] + L.scaleNE[1]) / 2, 0.12, (L.scaleNE[2] + L.scaleNE[3]) / 2);
   add(box(L.scaleNW[1] - L.scaleNW[0], 0.25, L.scaleNW[3] - L.scaleNW[2], mat.scale), (L.scaleNW[0] + L.scaleNW[1]) / 2, 0.12, (L.scaleNW[2] + L.scaleNW[3]) / 2);
   const barriers = {};
-  function barrier(key, x, z, rotY) {
-    const g = new THREE.Group(); g.position.set(x, 1.1, z);
+  function barrier(def) {
+    const g = new THREE.Group(); g.position.set(def.x, 1.1, def.z);
     g.add(box(0.6, 2.2, 0.6, mat.steel));
-    const arm = new THREE.Group(); const a = box(0.25, 0.25, 6.5, M('#f2f2f2')); a.position.z = 3.25; arm.add(a);
-    const s1 = box(0.27, 0.27, 0.8, B('#ef5350')); s1.position.z = 2; arm.add(s1); const s2 = s1.clone(); s2.position.z = 4.5; arm.add(s2);
-    arm.position.y = 0.9; g.add(arm); g.rotation.y = rotY; scene.add(g); barriers[key] = { arm, open: 0 };
+    const arm = new THREE.Group(); const a = box(0.25, 0.25, def.len, M('#f2f2f2')); a.position.z = def.len / 2; arm.add(a);
+    const s1 = box(0.27, 0.27, 0.8, B('#ef5350')); s1.position.z = def.len * 0.3; arm.add(s1); const s2 = s1.clone(); s2.position.z = def.len * 0.7; arm.add(s2);
+    arm.position.y = 0.9; g.add(arm); g.rotation.y = def.rot; scene.add(g); barriers[def.key] = { arm, open: 0, g, def };
   }
-  barrier('igvIn', L.igvIn - 2.9, L.igvInStopZ - 1.5, Math.PI / 2);
-  barrier('igvOut', L.igvOut + 2.9, L.igvOutStopZ + 1.5, -Math.PI / 2);
-  barrier('ne', L.neInX + 2.9, L.neStopZ + 1.5, -Math.PI / 2);
-  barrier('nw', L.vnS + 3, L.nwStopZ + 1.5, -Math.PI / 2);
-  barrier('scale', L.exitImpX + 2.9, L.scaleStopZ - 1.5, -Math.PI / 2);
-  barrier('b0', L.island[0], L.boothS + 1.2, -Math.PI / 2);
-  barrier('b1', L.island[1], L.boothS + 1.2, Math.PI / 2);
-  barrier('b2', L.seps[1], L.boothN - 1.2, Math.PI / 2);
-  barrier('b3', L.seps[2], L.boothN - 1.2, Math.PI / 2);
+  Y.BARRIERS.forEach(barrier);
   for (const [x0, x1] of [[L.igvIn - 1.6, L.igvIn + 1.6], [L.igvOut - 1.6, L.igvOut + 1.6]]) { add(box(0.4, 6.5, 0.4, mat.steel), x0 - 0.8, 3.25, 218); add(box(0.4, 6.5, 0.4, mat.steel), x1 + 0.8, 3.25, 218); }
   add(box(L.igvOut - L.igvIn + 6, 0.6, 0.8, mat.steel), (L.igvIn + L.igvOut) / 2, 6.5, 218);
   for (const x of L.insFront) { add(box(18, 0.5, 8, mat.canopy), x + 7.75, 6.5, L.insZ); for (const dx of [-0.5, 16]) for (const dz of [-3.8, 3.8]) add(box(0.4, 6.5, 0.4, mat.steel), x + dx, 3.25, L.insZ + dz); }
@@ -424,6 +418,50 @@
   layer('mag').visible = false;
   layer('masts'); layer('heat');
 
+  // ---- hạng mục VVS: trạm kiểm soát (camera + RFID chung một cột, biển LED, barie)
+  const cpObjs = {};
+  const CP_H = 7;
+  function ledDraw(o, f) {
+    const key = f.l1 + '|' + f.l2 + '|' + f.l3; if (o.ledKey === key) return; o.ledKey = key;
+    const c = o.ledCv.getContext('2d'); c.fillStyle = '#05080c'; c.fillRect(0, 0, 384, 128);
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillStyle = f.l3 ? '#ffd23f' : '#6fd3ff'; c.font = '700 ' + (f.l3 ? 46 : 36) + 'px "JetBrains Mono", ui-monospace, monospace'; c.fillText(f.l1, 192, 34);
+    c.fillStyle = '#9be3a5'; c.font = '500 25px "JetBrains Mono", ui-monospace, monospace'; c.fillText(f.l2, 192, 78);
+    if (f.l3) { c.fillStyle = f.l3.startsWith('MỜI') ? '#4cc38a' : '#ff8a65'; c.font = '700 24px "Be Vietnam Pro", system-ui, sans-serif'; c.fillText(f.l3, 192, 111); }
+    o.ledTex.needsUpdate = true;
+  }
+  for (const c of HW.CHECKPOINTS) {
+    const g = new THREE.Group(); g.position.set(c.x, 0, c.z);
+    g.add(pole(0, 0, CP_H, 0.22, '#7b8b99'));
+    const head = new THREE.Group(); head.rotation.y = Math.atan2(c.face[0], c.face[1]); g.add(head);   // +z cục bộ = hướng xe đang tới
+    const camB = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.5, 0.7), hwMat('#7fd1ff')); camB.position.set(0, 6.75, 0.35); head.add(camB);
+    const lens = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.2, 10).rotateX(Math.PI / 2), hwBasic('#0a121b')); lens.position.set(0, 6.75, 0.8); head.add(lens);
+    const rf = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.7, 0.14), hwMat('#f5a524')); rf.position.set(0, 5.95, 0.2); head.add(rf);
+    const rfa = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.55, 0.04), hwBasic('#ffe2a8')); rfa.position.set(0, 5.95, 0.29); head.add(rfa);
+    const ledBack = box(3.1, 1.1, 0.25, mat.dark); ledBack.position.set(0, 4.95, 0.28); head.add(ledBack);
+    const ledCv = document.createElement('canvas'); ledCv.width = 384; ledCv.height = 128;
+    const ledTex = new THREE.CanvasTexture(ledCv); ledTex.colorSpace = THREE.SRGBColorSpace;
+    const led = new THREE.Mesh(new THREE.PlaneGeometry(3.0, 1.0), new THREE.MeshBasicMaterial({ map: ledTex })); led.position.set(0, 4.95, 0.42); head.add(led);
+    const o = { g, ledCv, ledTex, ledKey: '', plate: '', plateT: -1e9, reads: 0, state: 'idle', cp: c };
+    cpObjs[c.id] = o; ledDraw(o, HW.ledFormat('', 0, 'idle'));
+    reg(g, { kind: 'cp', cp: c, title: c.name, id: c.id }, 'cp');
+    const bo = barriers[c.barrier]; if (bo) { bo.g.userData.info = { kind: 'barrier', cp: c, def: bo.def, title: 'Barie · ' + c.name, id: c.barrier }; pickables.push(bo.g); }
+  }
+  // cập nhật biển LED: hiển thị biển số + ngày giờ khi xe tới điểm dừng, giữ 6 giây sau khi xe đi
+  function updateLeds() {
+    const vs = sim.snapshotCache || [];
+    for (const c of HW.CHECKPOINTS) {
+      const o = cpObjs[c.id]; const [tx, tz, r] = c.trig;
+      let best = null, bd = r;
+      for (const v of vs) { const d = Math.hypot(v.fx - tx, v.fz - tz); if (d <= bd) { bd = d; best = v; } }
+      const open = sim.barrierOpen(barriers[c.barrier].def);
+      if (best) { if (o.plate !== best.plate) { o.plate = best.plate; o.reads++; } o.plateT = sim.t; o.state = open ? 'open' : 'read'; }
+      else if (sim.t - o.plateT > 6) o.state = 'idle';
+      else o.state = 'open';
+      ledDraw(o, HW.ledFormat(o.state === 'idle' ? '' : o.plate, sim.t, o.state));
+    }
+  }
+
   // ---- bản đồ nhiệt độ trễ 5G (vẽ lại khi có trạm hỏng / khôi phục)
   const HEAT = { x0: -10, z0: -30, w: 350, h: 365 };
   const heatCv = document.createElement('canvas'); heatCv.width = HEAT.w; heatCv.height = HEAT.h;
@@ -456,7 +494,13 @@
   });
   const esc = (t) => String(t).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
   const dl = (rows) => '<dl>' + rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${v}</dd>`).join('') + '</dl>';
+  function liveCp(info) {
+    const o = cpObjs[info.cp.id]; const open = sim.barrierOpen(barriers[info.cp.barrier].def);
+    const st = o.state === 'idle' ? 'Chờ xe' : open ? 'Đã đọc · barie mở' : 'Đang đọc · barie đóng';
+    return dl([['Biển LED', o.state === 'idle' ? 'SẴN SÀNG' : esc(o.plate)], ['Trạng thái', st], ['Barie', open ? '<b style="color:var(--ok)">Mở</b>' : '<b style="color:var(--err)">Đóng</b>'], ['Lượt đọc từ lúc chạy', o.reads]]);
+  }
   function liveDev(info) {
+    if (info.kind === 'cp' || info.kind === 'barrier') return liveCp(info);
     if (info.kind === '5g') {
       const c = info.cell; const dead = !!sim.deadCells[c.id];
       const ue = sim.vehicles.filter(v => !v.dead && v.av && v.cell === c.id).length;
@@ -475,6 +519,13 @@
         ['Phủ danh định', `≤ 20 ms: ${c.r[0]} m · ≤ 50 ms: ${c.r[1]} m · biên: ${c.r[2]} m`], ['Băng tần / chế độ', '5G SA, n78 (3,5 GHz); lõi và máy chủ biên đặt tại VN']];
       return rows;
     }
+    if (info.kind === 'cp') {
+      const c = info.cp, S = HW.CP_SPEC; const row = (t) => t.rows.map(r => r[0] + ': ' + r[1]).join(' · ');
+      return [['Mã', c.id], ['Vị trí cột', `x ${fmt(c.x, 1)} m · z ${fmt(c.z, 1)} m`], ['Cùng một cột', 'camera kiểm soát (cao 6,8 m) + đầu đọc RFID (cao 6,0 m) + biển LED (cao 4,5–5,5 m)'], ['Camera', esc(S.camera.rows[0][1])], ['RFID', esc(S.rfid.rows[0][1] + '; tầm đọc ' + S.rfid.rows[2][1])], ['Biển LED', 'Biển số, ngày giờ, trạng thái; P10 ngoài trời 3,0 × 1,0 m'], ['Barie', c.barrier.startsWith('lane') ? 'Barie mới ở đầu làn, tay đòn 4,6 m' : 'Barie hiện có của cổng, tay đòn 6,5 m'], ['Kết nối', 'Cáp quang → tủ cổng (switch PoE+) → SIVIP; xem tài liệu kỹ thuật VVS']];
+    }
+    if (info.kind === 'barrier') {
+      const S = HW.CP_SPEC.barrier; return [['Barie', info.id], ['Gắn với', info.cp.id + ' (camera + RFID + LED cùng cột)'], ['Quy tắc', esc(S.rows[1][1])], ['Điều khiển', esc(S.rows[2][1])]];
+    }
     const d = info.dev; const rows = [['Mã', d.id], ['Loại', HW.KIND_INFO[d.kind].name], ['Vị trí', `x ${fmt(d.x, 1)} m · z ${fmt(d.z, 1)} m`], ['Độ cao lắp', d.h + ' m'], ['Thông số', esc(d.fov)]];
     return rows;
   }
@@ -487,10 +538,10 @@
     if (!selected) return;
     const s = selected;
     if (s.type === 'dev') {
-      const info = s.info; const kc = info.kind === '5g' ? HW.KIND_INFO['5g'].color : HW.KIND_INFO[info.kind].color;
+      const info = s.info; const kk = info.kind === 'barrier' ? 'cp' : info.kind; const kc = HW.KIND_INFO[kk].color;
       if (full) {
-        const role = info.kind === '5g' ? info.cell.note : info.dev.role;
-        infoEl.innerHTML = `<button class="x" type="button" aria-label="Đóng">✕</button><h3>${esc(info.title)}</h3><div class="kind"><i style="background:${kc}"></i>${HW.KIND_INFO[info.kind].name}</div>`
+        const role = info.kind === '5g' ? info.cell.note : info.kind === 'cp' || info.kind === 'barrier' ? info.cp.role : info.dev.role;
+        infoEl.innerHTML = `<button class="x" type="button" aria-label="Đóng">✕</button><h3>${esc(info.title)}</h3><div class="kind"><i style="background:${kc}"></i>${info.kind === 'barrier' ? 'Barie' : HW.KIND_INFO[info.kind].name}</div>`
           + dl(devHtml(info)) + `<p>${esc(role)}</p><div class="live" id="infoLive"></div>`
           + (info.kind === '5g' ? '<div class="act"><button type="button" id="btnCell"></button></div>' : '')
           + '<p class="lab" style="font-size:11px">Số liệu là giả định minh hoạ, chưa phải datasheet thiết bị.</p>';
@@ -574,7 +625,7 @@
   function reset() {
     for (const [, o] of vObjs) { scene.remove(o.g); scene.remove(o.tr); }
     vObjs.clear(); slotVer = -1;
-    sim = new Y.Sim(sel.value, 1 + Math.floor(Math.random() * 1000)); heatVer = -1; cellVer = -1; showInfo(null);
+    sim = new Y.Sim(sel.value, 1 + Math.floor(Math.random() * 1000)); heatVer = -1; cellVer = -1; showInfo(null); for (const k in cpObjs) { cpObjs[k].reads = 0; cpObjs[k].plate = ''; cpObjs[k].plateT = -1e9; }
     $('scDesc').textContent = sim.sc.desc; lastLog = 0; $('log').innerHTML = '';
   }
   sel.addEventListener('change', reset);
@@ -589,14 +640,14 @@
   $('optTags').addEventListener('change', e => { showTags = e.target.checked; });
   $('optPlan').addEventListener('change', e => { if (planMesh) { planMesh.visible = e.target.checked; siteGroup.visible = !e.target.checked; } });
   $('optRoof').addEventListener('change', e => { roof.visible = e.target.checked; });
-  const LAYER_OPTS = { optMasts: 'masts', optCam: 'cam', optLidar: 'lidar', optRfid: 'rfid', optRtk: 'rtk', optUwb: 'uwb', optTl: 'tl', optMag: 'mag', optHeat: 'heat' };
+  const LAYER_OPTS = { optMasts: 'masts', optCam: 'cam', optLidar: 'lidar', optCp: 'cp', optRtk: 'rtk', optUwb: 'uwb', optTl: 'tl', optMag: 'mag', optHeat: 'heat' };
   const syncHeatLegend = () => $('heatLegend').classList.toggle('on', $('optHeat').checked);
   for (const [id, k] of Object.entries(LAYER_OPTS)) $(id).addEventListener('change', (e) => { layer(k).visible = e.target.checked; if (id === 'optHeat') syncHeatLegend(); });
   $('optRings').addEventListener('change', (e) => { for (const o of Object.values(cellObjs)) o.rings.visible = e.target.checked; });
   function setLayer(id, on) { const el = $(id); el.checked = on; el.dispatchEvent(new Event('change')); }
   document.querySelectorAll('[data-view]').forEach(b => b.addEventListener('click', () => {
     if (b.dataset.view === 'net') { setLayer('optHeat', true); setLayer('optRings', true); setLayer('optMasts', true); }
-    else if (b.dataset.view === 'sensors') { for (const id of ['optCam', 'optLidar', 'optRfid', 'optRtk', 'optUwb', 'optTl', 'optMag']) setLayer(id, true); setLayer('optHeat', false); setLayer('optRings', false); }
+    else if (b.dataset.view === 'sensors') { for (const id of ['optCam', 'optLidar', 'optCp', 'optRtk', 'optUwb', 'optTl', 'optMag']) setLayer(id, true); setLayer('optHeat', false); setLayer('optRings', false); }
   }));
   $('btnPanel').addEventListener('click', () => document.body.classList.toggle('panel-closed'));
 
@@ -644,15 +695,16 @@
   function animateBarriers() {
     const t = sim.t, G = sim.gates;
     const setB = (b, open) => { b.open += ((open ? 1 : 0) - b.open) * 0.15; b.arm.rotation.x = -b.open * 1.35; };
-    setB(barriers.igvIn, G.igvIn > t); setB(barriers.igvOut, G.igvOut > t); setB(barriers.ne, G.ne > t); setB(barriers.nw, G.nw > t); setB(barriers.scale, G.scale > t);
-    for (let k = 0; k < 4; k++) setB(barriers['b' + k], G.booth[k] > t);
+    for (const def of Y.BARRIERS) setB(barriers[def.key], sim.barrierOpen(def));
   }
 
+  let ledT = 0;
   function updateHardware() {
     if (sim.netVer !== cellVer) { refreshCells(); cellVer = sim.netVer; }
     if ($('optHeat').checked) drawHeat();
     for (const z in tlLights) { const locked = !!(sim.zones[z] && sim.zones[z].lockedBy); for (const l of tlLights[z]) l.material.color.set(locked ? '#ef5350' : '#4cc38a'); }
     for (const r of lidarSpin) r.rotation.z += 0.08;
+    ledT += 1; if (ledT % 6 === 0) updateLeds();
     updateSelection();
   }
   // ------------------------------------------------------------ vòng lặp
