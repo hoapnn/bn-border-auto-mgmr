@@ -93,8 +93,9 @@ Căn cứ pháp lý dữ liệu chính (#10): Luật BVDLCN 91/2025 + NĐ 356/20
 
 ## 5. Việc đang dở
 
-- **Branch/PR:** không có. Repo chỉ có nhánh `main`, không có PR nào mở. Mọi sản phẩm nằm ở artifact claude.ai và thư mục dự án dùng chung, không nằm trong git.
-- **7 chỗ sửa ở Phần C bản phản biện (#8)** chưa được xác nhận là đã áp vào đề xuất chính (#7). Danh mục công việc (#9) đã áp 3 chỗ: đặt hàng sớm bằng thư chấp thuận, xây lắp trước Tết, dời CCTV sang tháng 3. Gói "Tối ưu" và việc tách cam kết 30/04 / 17/05 cần kiểm tra đã có trong #7 chưa.
+- **25/11/2026:** đã áp 7 chỗ sửa của bản phản biện vào đề xuất, thành bản v2 trong repo: `CLAUDE OUTPUTS/BaoNguyen/BaoNguyen-DeXuat_Report_v2.md` (phương án Tối ưu 31,8 tỷ, gói VVS 24,3 tỷ, dòng tiền 40/20/15/20/5, cơ chế thu hồi tạm ứng, O4 có điều kiện, bảo hành phần mềm 24 tháng). Chờ anh Hòa duyệt; artifact #7 trên claude.ai chưa được cập nhật.
+- **25/11/2026:** chi tiết 8 hạng mục SIVIP có thể nhận thầu: `CLAUDE OUTPUTS/BaoNguyen/BaoNguyen-SIVIP_Report_v1.md` (khoảng 5,8 tỷ cam kết, 117 người-tháng; điều kiện tiên quyết là SIVIP có sản phẩm nền).
+- Danh mục công việc (#9) cần đồng bộ lại số liệu với đề xuất v2.
 - **Đang chờ anh Hòa trả lời:**
   - ngày đóng thầu và ngày dự kiến có kết quả;
   - phạm vi gói VVS dự thầu;
@@ -108,7 +109,7 @@ Căn cứ pháp lý dữ liệu chính (#10): Luật BVDLCN 91/2025 + NĐ 356/20
 
 ## 6. Việc tiếp theo
 
-1. Áp 7 chỗ sửa của bản phản biện vào đề xuất #7 (sau khi anh Hòa đồng ý), đồng bộ lại số liệu chi phí giữa #7, #8, #9.
+1. Anh Hòa duyệt đề xuất v2 và tài liệu SIVIP; đồng bộ số liệu sang #9 và các bộ slide.
 2. **Thay toàn bộ chi phí ước tính bằng báo giá thật** (thiết bị cổng, OCR, CCTV, mạng Viettel, xe nâng/đầu kéo thuê–mua, SIVIP) trước khi nộp hồ sơ.
 3. Nhờ **luật sư đối chiếu nguyên văn** các điều luật có dấu (*) trong #10 và 13 rủi ro pháp lý ở mục IV của #7.
 4. Bắt đầu **PA2 (làm việc với cơ quan chức năng) từ tuần 07/12/2026**, hướng tới quy chế cấp tỉnh về dữ liệu xe tự hành.
