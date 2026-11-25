@@ -8,7 +8,7 @@ const fs = require('fs'); const path = require('path');
 const dir = __dirname;
 const read = (f) => fs.readFileSync(path.join(dir, f), 'utf8');
 const inline = (code) => '<script>\n' + code.replace(/<\/script/gi, '<\\/script') + '\n</script>';
-let body = read('page.html').replace('<!--SIM_CORE-->', () => inline(read('sim-core.js'))).replace('<!--PLAN-->', () => inline(read('plan-image.js'))).replace('<!--APP-->', () => inline(read('app.js')));
+let body = read('page.html').replace('<!--HW-->', () => inline(read('hardware.js'))).replace('<!--SIM_CORE-->', () => inline(read('sim-core.js'))).replace('<!--PLAN-->', () => inline(read('plan-image.js'))).replace('<!--APP-->', () => inline(read('app.js')));
 const args = process.argv.slice(2);
 const fragment = args.includes('--fragment');
 const out = args.find(a => !a.startsWith('--')) || path.join(dir, 'BaoNguyen_Demo3D_v2.html');
