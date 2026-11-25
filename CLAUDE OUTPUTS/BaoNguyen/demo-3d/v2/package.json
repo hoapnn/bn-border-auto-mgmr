@@ -1,0 +1,11 @@
+{
+  "name": "bao-nguyen-demo-3d-v2",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Mô phỏng 3D bến xe Bảo Nguyên theo layout PDF concept: điều phối xe không va chạm",
+  "scripts": {
+    "build": "node build.js",
+    "test": "node test/run-scenarios.js 60 1 2"
+  },
+  "license": "UNLICENSED"
+}
