@@ -155,13 +155,9 @@
   const DEVICES = [
     // --- Camera giám sát + nhận dạng
     { id: 'CAM-01', kind: 'cam', name: 'Camera toàn cảnh cổng trung tâm', x: 205.5, z: 168, h: 9, fov: 'PTZ 4K, zoom 30×', role: 'Giám sát làn IGV vào/ra, đọc biển số xe thông quan thường.' },
-    { id: 'CAM-02', kind: 'cam', name: 'Camera cổng IGV', x: 198.7, z: 222, h: 6.5, fov: '2 × 8 MP cố định', role: 'Chụp xe và container tại cổng kiểm soát IGV, đối chiếu OCR.' },
     { id: 'CAM-03', kind: 'cam', name: 'Camera lối vào nhà chuyển tải (tây)', x: 87, z: 142, h: 9, fov: 'PTZ 4K', role: 'Quan sát 4 làn IGV khi xe vào; hình ảnh cho người giám sát từ xa.' },
     { id: 'CAM-04', kind: 'cam', name: 'Camera nhà chuyển tải (tây-bắc)', x: 87, z: 104, h: 9, fov: 'PTZ 4K', role: 'Quan sát 4 làn xe nội địa.' },
     { id: 'CAM-05', kind: 'cam', name: 'Camera cầu trục phía đông', x: 129.5, z: 124, h: 11, fov: '4 × 8 MP', role: 'Nhìn xuống ô chờ container, đọc mã container, phát hiện người vào vùng nâng hạ.' },
-    { id: 'CAM-06', kind: 'cam', name: 'Camera cổng xuất khẩu (tây bắc)', x: 56, z: -2, h: 7, fov: '2 × 8 MP', role: 'Đọc biển số, mã container xe VN chở hàng xuất.' },
-    { id: 'CAM-07', kind: 'cam', name: 'Camera cổng nhập khẩu (đông bắc)', x: 193, z: 6, h: 7, fov: '2 × 8 MP', role: 'Đọc biển số xe VN đến nhận hàng nhập.' },
-    { id: 'CAM-08', kind: 'cam', name: 'Camera trạm cân', x: 195.5, z: 52, h: 6, fov: '2 × 5 MP', role: 'Ghi hình xe và seal khi cân.' },
     { id: 'CAM-09', kind: 'cam', name: 'Camera khu kiểm hoá', x: 95, z: 205, h: 8, fov: 'PTZ 4K', role: 'Giám sát khu kiểm hoá Hải quan (giả định đặt ở bãi 11 ô tây nam).' },
     { id: 'CAM-10', kind: 'cam', name: 'Camera vòng IGV phía tây', x: 52, z: 170, h: 9, fov: 'PTZ 4K', role: 'Quan sát góc vòng IGV phía tây nam.' },
     { id: 'CAM-11', kind: 'cam', name: 'Camera ranh giới phía nam', x: 150, z: 227, h: 9, fov: 'PTZ nhiệt + ánh sáng', role: 'Giám sát ranh giới phía nam, phát hiện xâm nhập ban đêm.' },
@@ -174,12 +170,6 @@
     { id: 'LID-05', kind: 'lidar', zone: 5, name: 'LiDAR vùng giao cắt 5 (rẽ vào làn IGV)', x: 43, z: 150, h: 10, fov: '360°, tầm 80 m', role: 'Giám sát chỗ IGV rẽ vào 4 làn nhà chuyển tải.' },
     { id: 'LID-06', kind: 'lidar', zone: 6, name: 'LiDAR vùng giao cắt 6 (ra nhà chuyển tải, IGV)', x: 140, z: 128, h: 10, fov: '360°, tầm 80 m', role: 'Giám sát lối ra làn IGV; bổ sung cho xe khi GNSS yếu gần mái nhà.' },
     { id: 'LID-07', kind: 'lidar', zone: 7, name: 'LiDAR vùng giao cắt 7 (nhập làn sau kiểm hoá)', x: 44, z: 198, h: 10, fov: '360°, tầm 80 m', role: 'Giám sát chỗ nhập vòng IGV sau khu kiểm hoá.' },
-    // --- Cổng RFID / OCR
-    { id: 'RFID-01', kind: 'rfid', name: 'Cổng IGV vào · OCR + RFID', x: 193.0, z: 216, h: 6.5, fov: 'Đọc 20–35 s', role: 'Đọc mã container, biển số, thẻ RFID IGV; đối chiếu lệnh SIVIP rồi mở barie.' },
-    { id: 'RFID-02', kind: 'rfid', name: 'Cổng IGV ra · OCR + RFID', x: 204.4, z: 216, h: 6.5, fov: 'Đọc 20–35 s', role: 'Kiểm soát xe TQ rời bãi, đối chiếu container đã giao nhận.' },
-    { id: 'RFID-03', kind: 'rfid', name: 'Cổng nhập khẩu · OCR biển số', x: 199.0, z: 1, h: 6, fov: 'Đọc < 3 s', role: 'Nhận dạng xe VN được SIVIP gọi, mở barie đông bắc.' },
-    { id: 'RFID-04', kind: 'rfid', name: 'Cổng xuất khẩu · OCR + tờ khai', x: 56.8, z: -6, h: 6, fov: 'Đọc < 3 s', role: 'Nhận dạng xe VN chở hàng xuất, đối chiếu tờ khai.' },
-    { id: 'RFID-05', kind: 'rfid', name: 'Trạm cân ra · OCR seal', x: 194.4, z: 44, h: 5.5, fov: 'Đọc < 5 s', role: 'Cân xe và kiểm tra seal container trước khi ra.' },
     // --- Trạm gốc RTK (tăng độ chính xác GNSS cho IGV ngoài trời)
     { id: 'RTK-01', kind: 'rtk', name: 'Trạm gốc RTK-01 · mái khối cổng trái', x: 174, z: 185, h: 25, fov: 'GNSS đa hệ, phủ ~10 km', role: 'Phát số hiệu chỉnh RTK cho IGV; đặt nơi thoáng trời, nền chắc.' },
     { id: 'RTK-02', kind: 'rtk', name: 'Trạm gốc RTK-02 · mái nhà chuyển tải', x: 93, z: 90, h: 19.5, fov: 'GNSS đa hệ, phủ ~10 km', role: 'Trạm dự phòng thứ hai, hai trạm so chéo để phát hiện lệch.' },
@@ -197,6 +187,58 @@
     { id: 'TL-07', kind: 'tl', zone: 7, name: 'Đèn tín hiệu vùng giao cắt 7', x: 50, z: 214.5, h: 5, fov: 'Đèn 3 màu + V2X', role: 'Như trên, chỗ nhập vòng IGV sau kiểm hoá.' },
   ];
 
+  // ------------------------------------------------------------------ 4) Hạng mục VVS: trạm kiểm soát cổng
+  // Mỗi trạm là MỘT cột duy nhất mang camera kiểm soát + đầu đọc RFID (cùng vị trí), biển LED báo biển số + ngày giờ,
+  // và barie bên cạnh. Barie của cổng TQ / cổng VN / trạm cân / đường xuyên biên giới là barie có sẵn trong mô hình (sim-core BARRIERS);
+  // barie 8 làn nhà chuyển tải là barie mới đặt ở đầu mỗi làn. face = hướng biển LED quay về phía xe đang tới.
+  // trig = [x, z, bán kính]: điểm xe dừng trước barie và bán kính nhận diện của camera/RFID.
+  const FW = { n: [0, -1], s: [0, 1], e: [1, 0], w: [-1, 0] };
+  const CHECKPOINTS = [
+    // Cổng TQ (làn IGV)
+    { id: 'CP-TQ1', group: 'tq', name: 'Cổng IGV vào (cổng TQ)', x: 193.0, z: 216, face: FW.s, trig: [195.4, 214, 9], barrier: 'igvIn',
+      role: 'Đọc thẻ RFID của IGV / xe TQ và chụp biển số, mã container; đối chiếu lệnh SIVIP rồi mở barie.' },
+    { id: 'CP-TQ2', group: 'tq', name: 'Cổng IGV ra (cổng TQ)', x: 204.4, z: 216, face: FW.n, trig: [202, 222, 9], barrier: 'igvOut',
+      role: 'Đọc xe TQ rời bãi, đối chiếu container đã giao nhận trước khi mở barie ra Km0.' },
+    // Cổng VN và trạm cân
+    { id: 'CP-VN1', group: 'vn', name: 'Cổng nhập khẩu (đông bắc)', x: 199.0, z: 1, face: FW.n, trig: [196.5, 4, 12], barrier: 'ne',
+      role: 'Nhận dạng xe VN được SIVIP gọi đến nhận hàng nhập, mở barie đông bắc.' },
+    { id: 'CP-VN2', group: 'vn', name: 'Cổng xuất khẩu (tây bắc)', x: 56.8, z: -6, face: FW.n, trig: [60, -4, 12], barrier: 'nw',
+      role: 'Nhận dạng xe VN chở hàng xuất, đối chiếu tờ khai rồi mở barie tây bắc.' },
+    { id: 'CP-VN3', group: 'scale', name: 'Trạm cân ra', x: 194.4, z: 44, face: FW.s, trig: [190.8, 40, 9], barrier: 'scale',
+      role: 'Cân xe, đọc seal container và biển số trước khi cho xe có hàng ra.' },
+    // Đường xuyên biên giới (cổng trung tâm): 4 làn xe thông quan thường
+    { id: 'CP-XB1', group: 'xb', name: 'Đường xuyên biên giới · làn 1 (VN → TQ)', x: 213.3, z: 191.6, face: FW.n, trig: [211, 193.5, 5], barrier: 'b0',
+      role: 'Đọc xe thông quan thường đi từ VN sang TQ. Barie này nằm ngoài phạm vi điều phối của bãi nhưng dùng chung thiết bị VVS.' },
+    { id: 'CP-XB2', group: 'xb', name: 'Đường xuyên biên giới · làn 2 (VN → TQ)', x: 217.0, z: 191.6, face: FW.n, trig: [219.7, 193.5, 5], barrier: 'b1', role: 'Như làn 1.' },
+    { id: 'CP-XB3', group: 'xb', name: 'Đường xuyên biên giới · làn 3 (TQ → VN)', x: 222.6, z: 176.8, face: FW.s, trig: [226.5, 178, 5], barrier: 'b2', role: 'Đọc xe thông quan thường đi từ TQ sang VN.' },
+    { id: 'CP-XB4', group: 'xb', name: 'Đường xuyên biên giới · làn 4 (TQ → VN)', x: 231.2, z: 176.8, face: FW.s, trig: [233.5, 178, 5], barrier: 'b3', role: 'Như làn 3.' },
+  ];
+  // 8 làn nhà chuyển tải: cột ở mép bắc của làn, barie ngay cạnh, cùng nằm ở đầu làn phía tây (x = 88–89)
+  const LANE_TZ = [90.9, 99.8, 108.3, 116.7, 127.6, 136.1, 144.4, 152.9];   // = tim làn (sim-core: zc − 1,5)
+  LANE_TZ.forEach((tz, i) => CHECKPOINTS.push({
+    id: 'CP-L' + (i + 1), group: 'lane', lane: i, name: 'Làn ' + (i + 1) + (i < 4 ? ' (xe nội địa)' : ' (IGV / xe TQ)') + ' · nhà chuyển tải',
+    x: 88.3, z: +(tz - 4.2).toFixed(1), face: FW.w, trig: [88.5, tz, 6], barrier: 'lane' + (i + 1), post: [89.0, +(tz - 2.3).toFixed(1)],
+    role: 'Nhận dạng xe vào làn ' + (i + 1) + ' (đối chiếu làn SIVIP đã xếp) rồi mở barie; sau đó cầu trục mới nâng / hạ container.' }));
+
+  // Thông số thiết bị (giả định theo ngành; thay bằng datasheet khi chốt; không có giá)
+  const CP_SPEC = {
+    pole: { title: 'Cột chung', rows: [['Kiểu', 'Cột thép mạ kẽm cao 7 m, bệ bê tông; mang camera, đầu đọc RFID và biển LED trên cùng một cột'], ['Cấp bảo vệ', 'IP66, chống sét lan truyền, tiếp địa ≤ 4 Ω']] },
+    camera: { title: 'Camera kiểm soát', rows: [['Loại', '1 camera ALPR + 1 camera tổng quan, 8 MP, đèn hồng ngoại, HDR'], ['Độ cao lắp', '6,8 m, hướng xuống làn xe'], ['Chức năng', 'Đọc biển số (ANPR), chụp mã container, ảnh bằng chứng gắn mốc thời gian'], ['Đầu ra', 'Luồng RTSP + sự kiện đọc biển số (JSON) gửi lên SIVIP']] },
+    rfid: { title: 'Đầu đọc RFID', rows: [['Loại', 'UHF 860–960 MHz, EPC Gen2, 4 cổng ăng-ten phân cực tròn'], ['Độ cao lắp', '6,0 m, cùng cột với camera, hướng xuống làn'], ['Tầm đọc', '6–12 m, đọc được xe đang chạy ≤ 20 km/h'], ['Thẻ', 'Thẻ dán kính xe VN / thẻ IGV; thẻ gắn container nếu có'], ['Đầu ra', 'Sự kiện đọc thẻ (EPC, RSSI, thời điểm) cùng mã camera']] },
+    led: { title: 'Biển LED', rows: [['Loại', 'LED full-color ngoài trời P10, 3,0 × 1,0 m, độ sáng ≥ 5 000 cd/m², tự chỉnh theo ánh sáng'], ['Độ cao lắp', '4,5–5,5 m (phía trên container cao 4,05 m)'], ['Nội dung', 'Dòng 1: biển số xe; dòng 2: ngày giờ; dòng 3: trạng thái (ĐANG ĐỌC, MỜI QUA, DỪNG)'], ['Điều khiển', 'Nhận lệnh từ SIVIP qua mạng; mất kết nối thì hiện "DỪNG – CHỜ NHÂN VIÊN"']] },
+    barrier: { title: 'Barie', rows: [['Loại', 'Barie tay đòn điện, tay đòn 4,5–6,5 m, mở/đóng ~1,5 s, có cảm biến vòng từ + chùm tia chống đập xe'], ['Quy tắc', 'Chỉ mở khi SIVIP đã đặt được ô / làn / vị trí cho xe; tự đóng khi xe đã qua'], ['Điều khiển', 'Tủ điều khiển tại cổng, nhận lệnh SIVIP; mất mạng thì giữ đóng, nhân viên mở tay']] },
+    link: { title: 'Kết nối', rows: [['Mạng', 'Cáp quang từ tủ cổng về phòng máy; trong tủ cổng switch công nghiệp PoE+ (camera, đầu đọc RFID), I/O module (barie, vòng từ), bộ điều khiển biển LED'], ['Phân vùng', 'VLAN riêng cho thiết bị kiểm soát cổng, tách khỏi mạng 5G của IGV'], ['Giao thức', 'ONVIF/RTSP (camera), LLRP (đầu đọc RFID), Modbus-TCP hoặc dry contact (barie), API SIVIP (sự kiện, lệnh)'], ['Nguồn', 'Điện lưới + UPS 30 phút tại tủ cổng']] },
+  };
+
+  // Biển LED: định dạng nội dung hiển thị. t = giây mô phỏng; ngày demo giả định 25/03/2027, ca bắt đầu 06:00.
+  const DEMO_DATE = '25/03/2027';
+  function ledTime(t) { const s = Math.floor(t) + 6 * 3600; const p = (n) => String(n).padStart(2, '0'); return `${p(Math.floor(s / 3600) % 24)}:${p(Math.floor(s / 60) % 60)}:${p(s % 60)}`; }
+  // state: 'idle' | 'read' (đã đọc, barie đóng) | 'open'
+  function ledFormat(plate, t, state) {
+    if (state === 'idle' || !plate) return { l1: 'SẴN SÀNG', l2: DEMO_DATE + ' ' + ledTime(t), l3: '' };
+    return { l1: plate, l2: DEMO_DATE + ' ' + ledTime(t), l3: state === 'open' ? 'MỜI QUA' : 'ĐANG ĐỌC · DỪNG' };
+  }
+
   // Nam châm sàn + transponder: tính từ các tuyến IGV (sim-core.routes) khi dựng. Mô tả chung ở đây.
   const MAG = {
     name: 'Nam châm sàn (magnetic marker)',
@@ -209,7 +251,7 @@
   };
 
   const KIND_INFO = {
-    cam: { name: 'Camera', color: '#7fd1ff' }, lidar: { name: 'LiDAR cố định', color: '#a78bfa' }, rfid: { name: 'Cổng RFID/OCR', color: '#f5a524' },
+    cam: { name: 'Camera', color: '#7fd1ff' }, lidar: { name: 'LiDAR cố định', color: '#a78bfa' }, cp: { name: 'Trạm kiểm soát VVS (camera + RFID chung cột)', color: '#f5a524' },
     rtk: { name: 'Trạm gốc RTK', color: '#4cc38a' }, uwb: { name: 'Neo UWB', color: '#ff7ab6' }, tl: { name: 'Đèn tín hiệu', color: '#f2c14e' },
     mag: { name: 'Nam châm sàn / transponder', color: '#d9e2ea' }, '5g': { name: 'Trụ 5G', color: '#3cc8e6' },
   };
@@ -218,8 +260,9 @@
   function solids() {
     const out = CELLS.map(c => ({ id: c.id, x: c.x, z: c.z, r: c.type === 'indoor' ? 0.2 : 0.5 }));
     for (const d of DEVICES) if (d.kind !== 'uwb' && d.kind !== 'rtk') out.push({ id: d.id, x: d.x, z: d.z, r: 0.25 });
+    for (const c of CHECKPOINTS) { out.push({ id: c.id, x: c.x, z: c.z, r: 0.3 }); if (c.post) out.push({ id: c.id + '-barie', x: c.post[0], z: c.post[1], r: 0.3 }); }
     return out;
   }
 
-  return { IGV, socOf, solids, CELLS, OBSTACLES, cellLatency, serving, speedFactor, extraGap, latClass, DEVICES, MAG, TAG, KIND_INFO, segHitsRect, inRect };
+  return { IGV, socOf, solids, CHECKPOINTS, CP_SPEC, ledFormat, ledTime, DEMO_DATE, LANE_TZ, CELLS, OBSTACLES, cellLatency, serving, speedFactor, extraGap, latClass, DEVICES, MAG, TAG, KIND_INFO, segHitsRect, inRect };
 });

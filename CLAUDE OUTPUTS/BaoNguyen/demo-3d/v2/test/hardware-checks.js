@@ -21,10 +21,26 @@ for (let z = 1; z <= 7; z++) {
   ok(HW.DEVICES.filter(d => d.kind === 'tl' && d.zone === z).length === 1, `vùng ${z} thiếu / thừa đèn tín hiệu`);
   ok(HW.DEVICES.filter(d => d.kind === 'lidar' && d.zone === z).length === 1, `vùng ${z} thiếu / thừa LiDAR`);
 }
-// cổng RFID/OCR đặt đúng cạnh các tim cổng của layout
-const rf = (id) => HW.DEVICES.find(d => d.id === id);
-ok(Math.abs(rf('RFID-01').z - LAYOUT.igvInStopZ) < 6, 'RFID-01 xa vạch dừng làn IGV vào');
-ok(Math.abs(rf('RFID-02').z - LAYOUT.igvOutStopZ) < 8, 'RFID-02 xa vạch dừng làn IGV ra');
+// Trạm kiểm soát VVS: 17 trạm, camera + RFID cùng cột, không còn đầu đọc RFID đứng riêng
+ok(HW.CHECKPOINTS.length === 17, `phải có 17 trạm kiểm soát, được ${HW.CHECKPOINTS.length}`);
+ok(!HW.DEVICES.some(d => d.kind === 'rfid'), 'còn đầu đọc RFID đứng riêng (phải gộp vào cột trạm kiểm soát)');
+const cpIds = new Set();
+for (const c of HW.CHECKPOINTS) {
+  ok(!cpIds.has(c.id) && !ids.has(c.id), `trùng mã trạm ${c.id}`); cpIds.add(c.id);
+  ok(Number.isFinite(c.x) && Number.isFinite(c.z) && c.x > -10 && c.x < 340 && c.z > -30 && c.z < 335, `${c.id} ngoài khung`);
+  ok(c.trig && c.trig.length === 3 && c.barrier, `${c.id} thiếu vùng kích hoạt / barie`);
+}
+ok(HW.CHECKPOINTS.filter(c => /^CP-L\d$/.test(c.id)).length === 8, 'phải có 8 trạm ở 8 làn nhà chuyển tải');
+ok(HW.CHECKPOINTS.filter(c => /^CP-XB/.test(c.id)).length === 4, 'phải có 4 trạm ở đường qua biên');
+ok(HW.CHECKPOINTS.some(c => c.id === 'CP-TQ1') && HW.CHECKPOINTS.some(c => c.id === 'CP-TQ2') && HW.CHECKPOINTS.some(c => c.id === 'CP-VN3'), 'thiếu trạm cổng TQ / cân');
+const tqIn = HW.CHECKPOINTS.find(c => c.id === 'CP-TQ1');
+ok(Math.abs(tqIn.z - LAYOUT.igvInStopZ) < 6, 'CP-TQ1 xa vạch dừng làn IGV vào');
+// định dạng biển LED và mô hình giờ
+const idle = HW.ledFormat(null, 0, 'idle'), rd = HW.ledFormat('GX A5934Z', 75, 'read'), op = HW.ledFormat('GX A5934Z', 75, 'open');
+ok(idle.l1 === 'SẴN SÀNG', 'LED rảnh phải hiện SẴN SÀNG');
+ok(rd.l1 === 'GX A5934Z' && /^\d{2}\/\d{2}\/\d{4}\s\d{2}:\d{2}:\d{2}$/.test(rd.l2), 'LED phải có biển số và ngày giờ');
+ok(op.l3 === 'MỜI QUA', 'LED mở barie phải hiện MỜI QUA');
+ok(HW.ledTime(75) === '06:01:15', 'giờ mô phỏng bắt đầu 06:00:00');
 
 // 2) Mô hình độ trễ: đơn điệu theo khoảng cách, đúng ngưỡng, mất sóng ngoài biên
 const c0 = HW.CELLS[0];
