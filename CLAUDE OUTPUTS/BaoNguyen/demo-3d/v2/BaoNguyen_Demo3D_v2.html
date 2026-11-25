@@ -2161,7 +2161,8 @@ window.PLAN_IMG = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAkGBw
   requestAnimationFrame(frame);
   window.__yard = { get sim() { return sim; }, setView,
     selectDevice(id) { const o = pickables.find(p => p.userData.info && p.userData.info.id === id); if (o) showInfo({ type: 'dev', info: o.userData.info, obj: o }); return !!o; },
-    selectVehicle(id) { showInfo({ type: 'veh', id }); } };
+    selectVehicle(id) { showInfo({ type: 'veh', id }); },
+    screenOf(id) { const o = vObjs.get(id); if (!o) return null; const v = new THREE.Vector3(o.g.position.x - 3, 1.5, o.g.position.z).project(camera); const r = wrap.getBoundingClientRect(); return [r.left + (v.x + 1) / 2 * r.width, r.top + (1 - v.y) / 2 * r.height]; } };
 })();
 
 </script>
