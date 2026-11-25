@@ -279,6 +279,7 @@
     this.gates = { outW: { openUntil: 0 }, ein: { openUntil: 0 }, outS: [{ openUntil: 0 }, { openUntil: 0 }] };
     this.outSNext = 0;
     this.bays = LAYOUT.bayX.map((x, i) => ({ i, x, state: 'free', trailer: null, by: 0 }));
+    this.vnYardFlight = 0;
     this.yard = { count: 0, pendingPick: 0, st: LAYOUT.yardSt.map((x, i) => ({ i, x, by: 0, occupied: false })) };
     this.ins = { st: LAYOUT.insSt.map((x, i) => ({ i, x, by: 0, occupied: false })) };
     this.stack = []; // stack[col][row] = [containerId...]
@@ -305,7 +306,7 @@
   Sim.prototype.initZones = function () {
     ZONE_RECTS.forEach((zr, k) => {
       const id = k + 1; const [x0, x1, z0, z1] = zr.r;
-      this.zones.push({ id, name: zr.name, rect: zr.r, lockedBy: 0, locks: 0 });
+      this.zones.push({ id, name: zr.name, rect: zr.r, lockedBy: 0, locks: 0, waiters: new Map() });
       for (let iz = 0; iz < GH; iz++) {
         const cz = GZ0 + (iz + 0.5) * CELL; if (cz < z0 || cz >= z1) continue;
         for (let ix = 0; ix < GW; ix++) {
@@ -416,7 +417,7 @@
       const c = cells[i]; const o = ow[c];
       if (o !== 0 && o !== veh.id && o !== veh.friend) { this._blk = { type: 1, cell: c, owner: o }; return 1; }
       const z = zo[c];
-      if (z !== 0 && this.zones[z].lockedBy !== veh.id) { this._blk = { type: 2, zone: z, cell: c }; return 2; }
+      if (z !== 0 && this.zones[z].lockedBy !== veh.id && !(veh.passed && veh.passed.includes(z))) { this._blk = { type: 2, zone: z, cell: c }; return 2; }
     }
     return 0;
   };
@@ -436,6 +437,11 @@
     const z0 = this._blk.zone;
     const zones = this.zones;
     if (zones[z0].lockedBy !== 0) return -1;
+    // công bằng: nhường xe đã chờ vùng này lâu hơn mình 45 s (chống "bỏ đói" xe ra khỏi ô)
+    const zw = zones[z0].waiters; const mine = zw.has(veh.id) ? zw.get(veh.id) : this.t;
+    for (const [id, since] of zw) {
+      if (id !== veh.id && since < mine - 45 && this.t - since < 600 && this.vmap.has(id)) return -1;
+    }
     zones[z0].lockedBy = veh.id; locked.push(z0);
     const total = veh.trailer ? TRUCK_TOTAL : (veh.kind === 'rs' ? RS_HL * 2 : TRACTOR_LEN);
     let clearUntil = sFrom + total + EXIT_CLEAR;
@@ -555,13 +561,25 @@
     if (v.job === 'vnSwap') {
       const bay = this.bays[v.bay];
       const p = buildPath([...pre, [L.connX, R.S], [L.connX, L.swapZ], [bay.x - 16, L.swapZ]], 10);
-      v.steps.push(drive(p, 0, p.len));
+      // chờ ở đường nối (ngoài vùng giao cắt) tới khi đầu kéo TQ đã rời ô — tránh kẹt chéo
+      const sWait = sNear(p, L.connX, L.swapZ + 22);
+      v.steps.push(drive(p, 0, sWait));
+      v.steps.push(task('waitBay', () => ({ wait: () => !bay.bobtail, label: 'Chờ ô đổi đầu kéo trống', then: () => {} })));
+      v.steps.push(drive(p, sWait, p.len));
       const rp = buildPath([[bay.x - 16, L.swapZ], [bay.x, L.swapZ], [bay.x, L.bayFrontZ]], 10);
       v.steps.push(drive(rp, 0, rp.len, -1, { friend: bay.trailer.id, reverse: true }));
       v.steps.push(task('couple', (veh) => this.taskCouple(veh, bay)));
     } else {
       if (this.yard.count >= 3) return false;
-      if (this.stockCount() - this.yard.pendingPick < 1) return false;
+      this.vnYardFlight = Math.max(0, this.vnYardFlight - 1);
+      if (this.stockCount() - this.yard.pendingPick < 1) {
+        // hết hàng để lấy: không giữ xe ở barie (tránh chặn đầu kéo phía sau), cho ra thẳng
+        const ox = L.outSX[v.outIdx = this.pickOutS()];
+        const p = buildPath([...pre, [ox, R.S], [ox, L.outSStopZ]], 10);
+        v.steps.push(drive(p, 0, p.len)); v.steps.push(task('gateOutS', (veh) => this.taskGateOutS(veh)));
+        this.logEv(`Xe #${v.id}: lô hẹn lấy chưa có trong bãi, SIVIP cho ra không tải`, 'warn');
+        this.inside++; v.inside = true; v.admitted = true; return true;
+      }
       this.yard.count++; this.yard.pendingPick++;
       this.pushYardRoute(v, [...pre, [R.W, R.S], [R.W, R.N]], 'east');
     }
@@ -633,7 +651,7 @@
       // chuyển quyền ô: xe → moóc
       this.releaseCells(v); tr.parked = true; tr.bay = bay.i; this.trailers.push(tr); this.claimTrailer(tr);
       v.trailer = null; v.friend = tr.id;
-      bay.state = 'trailer'; bay.trailer = tr; bay.by = 0;
+      bay.state = 'trailer'; bay.trailer = tr; bay.by = 0; bay.bobtail = v.id; v.bobtailOf = bay.i;
       this.callVN(bay, 40 + this.rng() * 120);
       const p = buildPath([[bay.x, L.bayFrontZ], [bay.x, L.swapZ], [R.W, L.swapZ], [R.W, L.outWZ], [L.outWStopX, L.outWZ]], 10);
       v.steps.push(drive(p, 0, p.len));
@@ -784,7 +802,10 @@
     while (this.events.length && this.events[0].t <= this.t) {
       const e = this.events.shift();
       if (e.type === 'arrive') {
-        if (e.fn === 'vnYard') this.backlog.east.push(() => this.makeEastArrival('vnYard'));
+        if (e.fn === 'vnYard') {
+          // chỉ nhận lệnh lấy hàng khi bãi còn container chưa được hẹn lấy
+          if (this.stockCount() - this.yard.pendingPick - this.vnYardFlight >= 1) { this.vnYardFlight++; this.backlog.east.push(() => this.makeEastArrival('vnYard')); }
+        }
         else this.backlog.west.push(() => this.makeWestArrival(e.fn));
       } else if (e.type === 'spawnVN') {
         const bay = this.bays[e.bay];
@@ -866,14 +887,14 @@
     const body = this.sampleCells(v, st, v.s);
     if (this.bodyConflict(v, body)) this.stats.invariant++;
     this.markCells(v, body);
-    // nhả vùng không còn dính
-    this.releaseZones(v);
+    // ghi nhận vùng mà thân xe đang nằm trong
+    if (v.zones.length) for (let i = 0; i < body.length; i++) { const z = this.zoneOf[body[i]]; if (z && v.zones.includes(z)) { if (!v.inZone) v.inZone = []; if (!v.inZone.includes(z)) v.inZone.push(z); } }
     // 2) đặt chỗ phía trước
     const wf = this.weather; const vmax = v.vmax * wf;
     const look = vmax * vmax / (2 * v.b) + 3 + this.gapExtra;
     let target = Math.min(st.s1, v.s + look);
     if (v.zones.length) target = Math.max(target, Math.min(v.clearTo, st.s1));
-    let ss = v.s; v.blocked = null;
+    let ss = v.s; v.blocked = null; let wantZone = 0;
     if (v.broken && this.t < v.broken) { v.blocked = { type: 3 }; target = v.s; }
     else if (v.broken) { v.broken = 0; this.logEv(`Xe #${v.id} đã được cứu hộ, giao thông giải tỏa`, 'ok'); }
     while (ss < target - 1e-9) {
@@ -881,13 +902,21 @@
       const cells = this.sampleCells(v, st, nx, CLAIM_MARGIN);
       const r = this.checkCells(v, cells);
       if (r === 0) { this.markCells(v, cells); ss = nx; continue; }
+      if (r === 2) wantZone = this._blk.zone;
       if (r === 2 && this.zones[this._blk.zone].lockedBy === 0) {
         const got = this.tryAcquire(v, st, nx, st.s1);
         if (got >= 0) { ss = got; target = Math.max(target, Math.min(v.clearTo, st.s1)); continue; }
       }
       v.blocked = this._blk; if (this._blk.type === 2) this.stats.zoneWaits++;
+      if (wantZone) { const zw = this.zones[wantZone].waiters; if (!zw.has(v.id)) zw.set(v.id, this.t); }
       break;
     }
+    // đã vào được vùng → bỏ khỏi danh sách chờ
+    for (const z of v.zones) this.zones[z].waiters.delete(v.id);
+    // nhả vùng không còn dính (sau khi đã đặt chỗ phía trước, để không mất khóa giữa hai bước)
+    this.releaseZones(v);
+    // đầu kéo TQ đã thực sự ra tới vùng trước ô → ô sẵn sàng cho đầu kéo VN
+    if (v.bobtailOf != null && v.inZone && v.inZone.includes(3)) { this.bays[v.bobtailOf].bobtail = 0; v.bobtailOf = null; }
     // 3) tốc độ
     const avail = ss - v.s;
     const gap = v.blocked ? this.gapExtra : 0;
@@ -905,6 +934,7 @@
     // 4) tới cuối bước lái
     if (v.s >= st.s1 - 1e-6) {
       v.s = st.s1; v.v = 0; v.si++; v.clearTo = -1;
+      if (v.passed && !(v.steps[v.si] && v.steps[v.si].path === st.path)) { v.passed.length = 0; if (v.inZone) v.inZone.length = 0; }
       const nx = v.steps[v.si];
       if (v.kind === 'rs') {
         if (v.state === 'drive') { v.state = 'lift'; v.t0 = this.t; v.steps = [drive(st.path, st.s1, st.s1)]; v.si = 0; v.s = st.s1; this.beginTransfer(); }
@@ -936,7 +966,12 @@
     for (let k = v.zones.length - 1; k >= 0; k--) {
       const z = v.zones[k]; let touch = false;
       for (let i = 0; i < v.cells.length; i++) if (zo[v.cells[i]] === z) { touch = true; break; }
-      if (!touch) { this.zones[z].lockedBy = 0; v.zones.splice(k, 1); }
+      if (!touch) {
+        this.zones[z].lockedBy = 0; v.zones.splice(k, 1);
+        // đã đi qua vùng này trên bước lái hiện tại: phần đệm đuôi moóc quét lại mép vùng không cần khóa lại
+        // (chỉ khi thân xe thực sự đã nằm trong vùng — không phải mới đặt chỗ phía trước rồi nhả)
+        if (v.inZone && v.inZone.includes(z)) { if (!v.passed) v.passed = []; v.passed.push(z); v.inZone.splice(v.inZone.indexOf(z), 1); }
+      }
     }
     if (!v.zones.length) v.clearTo = -1;
   };
@@ -944,7 +979,8 @@
   Sim.prototype.despawn = function (v) {
     this.releaseCells(v);
     for (const z of v.zones) this.zones[z].lockedBy = 0;
-    v.zones.length = 0; v.dead = true; this._dead = true; this.vmap.delete(v.id);
+    v.zones.length = 0; v.dead = true;
+    for (let k = 1; k < this.zones.length; k++) this.zones[k].waiters.delete(v.id); this._dead = true; this.vmap.delete(v.id);
     this.stats.despawned++;
     if (v.job === 'tqSwap') { this.stats.tqOut++; this.stats.turnaround.push(this.t - v.born); }
     if (v.job === 'vnSwap') this.stats.swaps++;

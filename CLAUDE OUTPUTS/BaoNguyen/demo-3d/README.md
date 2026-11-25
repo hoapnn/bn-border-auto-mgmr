@@ -21,7 +21,7 @@ Trên trang:
 ```bash
 cd "CLAUDE OUTPUTS/BaoNguyen/demo-3d"
 npm test                                # 8 kịch bản × 2 seed × 60 phút mô phỏng
-node test/run-scenarios.js 240 1 2 3    # chạy dài hơn: 240 phút, 3 seed
+npm run test:long                       # 8 kịch bản × 240 phút (seed 3)
 ```
 
 Sửa `sim-core.js`, `app.js` hoặc `page.html` xong thì chạy `node build.js` để đóng gói lại file HTML.
@@ -65,29 +65,45 @@ hình chữ nhật thật (không phình), ghi số lần giao nhau và khoảng
 Tiêu chí đạt: 0 lần giao nhau, 0 vi phạm bất biến, khoảng hở nhỏ nhất ≥ 0,3 m, không xe nào chờ
 liên tục quá 20 phút, có sản lượng ra khỏi bãi.
 
-## Kết quả kiểm thử (60 phút mô phỏng, seed 1 và 2)
+## Kết quả kiểm thử
+
+**60 phút mô phỏng, seed 1 và 2** (`npm test`, cũng là bài CI):
 
 | Kịch bản | Seed | Phút | Va chạm | Hở min (m) | Đổi đầu kéo | Xe TQ ra | Hạ/lấy bãi | Kiểm hóa | Chờ lâu nhất (s) | Hàng chờ Km0 cuối | Kết quả |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| normal | 1 | 60 | 0 | 2.50 | 20 | 21 | 9/5 | 5 | 338 | 1 | ĐẠT |
-| normal | 2 | 60 | 0 | 2.91 | 15 | 18 | 4/7 | 7 | 88 | 0 | ĐẠT |
-| peak | 1 | 60 | 0 | 2.00 | 26 | 31 | 8/7 | 5 | 405 | 22 | ĐẠT |
-| peak | 2 | 60 | 0 | 2.00 | 24 | 28 | 11/14 | 5 | 633 | 20 | ĐẠT |
-| laneFail | 1 | 60 | 0 | 2.48 | 27 | 29 | 7/4 | 9 | 349 | 0 | ĐẠT |
-| laneFail | 2 | 60 | 0 | 2.79 | 22 | 27 | 8/4 | 7 | 306 | 0 | ĐẠT |
-| breakdown | 1 | 60 | 0 | 2.50 | 23 | 22 | 8/7 | 2 | 300 | 1 | ĐẠT |
-| breakdown | 2 | 60 | 0 | 2.80 | 19 | 20 | 9/4 | 3 | 314 | 1 | ĐẠT |
-| inspection | 1 | 60 | 0 | 2.81 | 21 | 22 | 5/6 | 9 | 195 | 2 | ĐẠT |
-| inspection | 2 | 60 | 0 | 2.81 | 19 | 20 | 6/6 | 6 | 146 | 1 | ĐẠT |
-| av | 1 | 60 | 0 | 2.81 | 22 | 22 | 0/8 | 4 | 277 | 0 | ĐẠT |
-| av | 2 | 60 | 0 | 2.83 | 18 | 20 | 0/9 | 5 | 92 | 1 | ĐẠT |
-| weather | 1 | 60 | 0 | 2.65 | 17 | 19 | 9/5 | 6 | 858 | 2 | ĐẠT |
-| weather | 2 | 60 | 0 | 2.65 | 14 | 16 | 4/7 | 4 | 244 | 1 | ĐẠT |
-| stress | 1 | 60 | 0 | 2.00 | 15 | 19 | 6/23 | 4 | 934 | 134 | ĐẠT |
-| stress | 2 | 60 | 0 | 2.00 | 20 | 25 | 8/23 | 9 | 551 | 110 | ĐẠT |
+| normal | 1 | 60 | 0 | 2.48 | 21 | 21 | 9/5 | 2 | 196 | 1 | ĐẠT |
+| normal | 2 | 60 | 0 | 2.79 | 15 | 18 | 4/7 | 6 | 88 | 0 | ĐẠT |
+| peak | 1 | 60 | 0 | 2.00 | 24 | 28 | 7/7 | 3 | 640 | 26 | ĐẠT |
+| peak | 2 | 60 | 0 | 2.00 | 20 | 23 | 10/15 | 6 | 654 | 25 | ĐẠT |
+| laneFail | 1 | 60 | 0 | 2.48 | 25 | 26 | 6/4 | 2 | 673 | 4 | ĐẠT |
+| laneFail | 2 | 60 | 0 | 2.49 | 23 | 23 | 7/4 | 5 | 647 | 1 | ĐẠT |
+| breakdown | 1 | 60 | 0 | 2.50 | 22 | 22 | 8/7 | 4 | 300 | 1 | ĐẠT |
+| breakdown | 2 | 60 | 0 | 2.50 | 19 | 20 | 9/4 | 5 | 364 | 1 | ĐẠT |
+| inspection | 1 | 60 | 0 | 2.48 | 17 | 20 | 5/5 | 11 | 665 | 4 | ĐẠT |
+| inspection | 2 | 60 | 0 | 2.81 | 19 | 20 | 6/6 | 11 | 128 | 1 | ĐẠT |
+| av | 1 | 60 | 0 | 2.50 | 21 | 22 | 0/8 | 4 | 176 | 0 | ĐẠT |
+| av | 2 | 60 | 0 | 2.79 | 19 | 20 | 0/9 | 5 | 92 | 1 | ĐẠT |
+| weather | 1 | 60 | 0 | 2.65 | 15 | 19 | 9/5 | 3 | 687 | 2 | ĐẠT |
+| weather | 2 | 60 | 0 | 2.65 | 14 | 16 | 4/7 | 4 | 244 | 0 | ĐẠT |
+| stress | 1 | 60 | 0 | 2.00 | 20 | 23 | 8/23 | 3 | 628 | 126 | ĐẠT |
+| stress | 2 | 60 | 0 | 2.00 | 21 | 25 | 8/22 | 8 | 691 | 114 | ĐẠT |
 
-16/16 lượt chạy đạt: 0 lần giao nhau, 0 vi phạm bất biến ô lưới, khoảng hở nhỏ nhất 2,0 m.
+**240 phút mô phỏng, seed 3** (`npm run test:long`):
 
+| Kịch bản | Seed | Phút | Va chạm | Hở min (m) | Đổi đầu kéo | Xe TQ ra | Hạ/lấy bãi | Kiểm hóa | Chờ lâu nhất (s) | Hàng chờ Km0 cuối | Kết quả |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| normal | 3 | 240 | 0 | 2.49 | 84 | 87 | 21/25 | 22 | 640 | 1 | ĐẠT |
+| peak | 3 | 240 | 0 | 2.00 | 114 | 118 | 21/38 | 24 | 660 | 123 | ĐẠT |
+| laneFail | 3 | 240 | 0 | 2.00 | 120 | 124 | 19/23 | 21 | 629 | 26 | ĐẠT |
+| breakdown | 3 | 240 | 0 | 2.48 | 98 | 102 | 26/19 | 18 | 644 | 3 | ĐẠT |
+| inspection | 3 | 240 | 0 | 2.01 | 89 | 94 | 20/16 | 53 | 640 | 9 | ĐẠT |
+| av | 3 | 240 | 0 | 2.79 | 99 | 103 | 0/17 | 21 | 203 | 1 | ĐẠT |
+| weather | 3 | 240 | 0 | 2.65 | 76 | 80 | 21/24 | 15 | 776 | 7 | ĐẠT |
+| stress | 3 | 240 | 0 | 2.00 | 102 | 108 | 25/42 | 38 | 739 | 495 | ĐẠT |
+
+24/24 lượt chạy đạt: 0 lần giao nhau, 0 vi phạm bất biến ô lưới, khoảng hở nhỏ nhất 2,0 m.
+"Chờ lâu nhất" là lần đứng yên liên tục dài nhất của một xe (thường ở hàng chờ cổng Km0 hoặc chờ
+vùng nhập làn lúc cao điểm), không phải kẹt cứng.
 
 ## Giả định (bản vẽ không có kích thước)
 

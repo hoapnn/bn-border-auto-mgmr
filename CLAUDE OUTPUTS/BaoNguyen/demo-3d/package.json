@@ -5,7 +5,8 @@
   "description": "Mô phỏng 3D bãi container Bảo Nguyên: điều phối xe không va chạm",
   "scripts": {
     "build": "node build.js",
-    "test": "node test/run-scenarios.js 60 1 2"
+    "test": "node test/run-scenarios.js 60 1 2",
+    "test:long": "node test/run-scenarios.js 240 3"
   },
   "license": "UNLICENSED"
 }
